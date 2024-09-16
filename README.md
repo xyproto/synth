@@ -1,2 +1,3 @@
 # synth
-Simple synth package for generating audio samples
+
+This is experimental and a work in progress!
