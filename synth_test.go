@@ -35,10 +35,11 @@ func TestAnalyzeHighestFrequency(t *testing.T) {
 		t.Errorf("Expected frequency close to %.2f Hz, got %.2f Hz", frequency, estimatedFrequency)
 	}
 }
+
 func TestLinearSummation(t *testing.T) {
 	wave1 := createTestWaveform(0.5, 10)
 	wave2 := createTestWaveform(1.0, 10)
-	expected := createTestWaveform(1.0, 10) // Clamped to 1.0
+	expected := createTestWaveform(0.75, 10) // Averaging 0.5 and 1.0
 
 	result, err := LinearSummation(wave1, wave2)
 	if err != nil {
