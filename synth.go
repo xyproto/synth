@@ -338,6 +338,10 @@ func AnalyzeHighestFrequency(samples []float64, sampleRate int) float64 {
 		}
 	}
 	duration := float64(l) / float64(sampleRate)
+	if duration == 0 {
+		return 0
+	}
+
 	frequency := float64(zeroCrossings) / (2 * duration)
 	return frequency
 }
@@ -350,8 +354,8 @@ func NormalizeSamples(samples []float64, targetPeak float64) []float64 {
 	}
 
 	scale := targetPeak / currentPeak
-	l := len(samples)
 
+	l := len(samples)
 	normalizedSamples := make([]float64, l)
 	for i := 0; i < l; i++ {
 		normalized := samples[i] * scale
@@ -391,4 +395,52 @@ func PlayWav(filePath string) error {
 	}
 	cmd.Wait()
 	return nil
+}
+
+// LoadWav loads a WAV file and returns its samples as a slice of float64, along with the sample rate.
+func LoadWav(filename string) ([]float64, int, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error opening wav file: %v", err)
+	}
+	defer f.Close()
+
+	decoder := wav.NewDecoder(f)
+	buffer, err := decoder.FullPCMBuffer()
+	if err != nil {
+		return nil, 0, fmt.Errorf("error decoding wav file: %v", err)
+	}
+
+	intBuffer := buffer.Data
+	numSamples := len(intBuffer)
+	sampleRate := buffer.Format.SampleRate
+	samples := make([]float64, numSamples)
+
+	// Convert from int PCM data to float64
+	for i := range intBuffer {
+		samples[i] = float64(intBuffer[i]) / math.MaxInt16
+	}
+
+	return samples, sampleRate, nil
+}
+
+// PadSamples pads the shorter waveform with zeros to make both waveforms the same length.
+func PadSamples(wave1, wave2 []float64) ([]float64, []float64) {
+	length1 := len(wave1)
+	length2 := len(wave2)
+
+	if length1 == length2 {
+		return wave1, wave2
+	}
+
+	// Pad the shorter waveform with zeros
+	if length1 < length2 {
+		paddedWave1 := make([]float64, length2)
+		copy(paddedWave1, wave1)
+		return paddedWave1, wave2
+	}
+
+	paddedWave2 := make([]float64, length1)
+	copy(paddedWave2, wave2)
+	return wave1, paddedWave2
 }
