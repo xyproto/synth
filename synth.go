@@ -1,12 +1,15 @@
 package synth
 
 import (
+	"crypto/sha1"
 	"errors"
 	"fmt"
+	"image/color"
 	"io"
 	"math"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/go-audio/audio"
 	"github.com/go-audio/wav"
@@ -145,22 +148,55 @@ func SaveToWav(filename string, samples []float64, sampleRate int) error {
 	}
 	defer outFile.Close()
 
+	// Create a new WAV encoder
 	enc := wav.NewEncoder(outFile, sampleRate, 16, 1, 1)
 
+	// Create an IntBuffer for writing PCM data
 	buf := &audio.IntBuffer{
 		Format: &audio.Format{SampleRate: sampleRate, NumChannels: 1},
 		Data:   make([]int, len(samples)),
 	}
 
+	// Convert float64 samples back to int16 PCM format
 	for i, sample := range samples {
-		buf.Data[i] = int(sample * math.MaxInt16) // Convert to 16-bit PCM
+		// Scale from [-1.0, 1.0] float64 to [-32768, 32767] int16
+		scaled := sample * float64(math.MaxInt16)
+		buf.Data[i] = int(math.Max(math.Min(scaled, float64(math.MaxInt16)), float64(math.MinInt16))) // Clamp to int16 range
 	}
 
+	// Write the PCM buffer to the WAV file
 	if err := enc.Write(buf); err != nil {
 		return fmt.Errorf("error writing wav file: %v", err)
 	}
 
 	return enc.Close()
+}
+
+// LoadWav loads a WAV file and returns its samples as a slice of float64, along with the sample rate.
+func LoadWav(filename string) ([]float64, int, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error opening wav file: %v", err)
+	}
+	defer f.Close()
+
+	decoder := wav.NewDecoder(f)
+	buffer, err := decoder.FullPCMBuffer()
+	if err != nil {
+		return nil, 0, fmt.Errorf("error decoding wav file: %v", err)
+	}
+
+	intBuffer := buffer.Data
+	numSamples := len(intBuffer)
+	sampleRate := buffer.Format.SampleRate
+	samples := make([]float64, numSamples)
+
+	// Convert from int16 PCM data to float64 in range [-1.0, 1.0]
+	for i, sample := range intBuffer {
+		samples[i] = float64(sample) / math.MaxInt16
+	}
+
+	return samples, sampleRate, nil
 }
 
 // GenerateKick generates the kick drum sound based on the settings
@@ -337,11 +373,11 @@ func AnalyzeHighestFrequency(samples []float64, sampleRate int) float64 {
 			zeroCrossings++
 		}
 	}
+	//fmt.Printf("Zero Crossings: %d\n", zeroCrossings)
 	duration := float64(l) / float64(sampleRate)
 	if duration == 0 {
 		return 0
 	}
-
 	frequency := float64(zeroCrossings) / (2 * duration)
 	return frequency
 }
@@ -350,15 +386,13 @@ func AnalyzeHighestFrequency(samples []float64, sampleRate int) float64 {
 func NormalizeSamples(samples []float64, targetPeak float64) []float64 {
 	currentPeak := FindPeakAmplitude(samples)
 	if currentPeak == 0 {
-		return samples
+		return samples // Avoid division by zero
 	}
-
 	scale := targetPeak / currentPeak
-
-	l := len(samples)
-	normalizedSamples := make([]float64, l)
-	for i := 0; i < l; i++ {
-		normalized := samples[i] * scale
+	normalizedSamples := make([]float64, len(samples))
+	for i, sample := range samples {
+		normalized := sample * scale
+		// Clamp the values to the [-1, 1] range after scaling
 		if normalized > 1 {
 			normalizedSamples[i] = 1
 		} else if normalized < -1 {
@@ -397,33 +431,6 @@ func PlayWav(filePath string) error {
 	return nil
 }
 
-// LoadWav loads a WAV file and returns its samples as a slice of float64, along with the sample rate.
-func LoadWav(filename string) ([]float64, int, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, 0, fmt.Errorf("error opening wav file: %v", err)
-	}
-	defer f.Close()
-
-	decoder := wav.NewDecoder(f)
-	buffer, err := decoder.FullPCMBuffer()
-	if err != nil {
-		return nil, 0, fmt.Errorf("error decoding wav file: %v", err)
-	}
-
-	intBuffer := buffer.Data
-	numSamples := len(intBuffer)
-	sampleRate := buffer.Format.SampleRate
-	samples := make([]float64, numSamples)
-
-	// Convert from int PCM data to float64
-	for i := range intBuffer {
-		samples[i] = float64(intBuffer[i]) / math.MaxInt16
-	}
-
-	return samples, sampleRate, nil
-}
-
 // PadSamples pads the shorter waveform with zeros to make both waveforms the same length.
 func PadSamples(wave1, wave2 []float64) ([]float64, []float64) {
 	length1 := len(wave1)
@@ -443,4 +450,109 @@ func PadSamples(wave1, wave2 []float64) ([]float64, []float64) {
 	paddedWave2 := make([]float64, length1)
 	copy(paddedWave2, wave2)
 	return wave1, paddedWave2
+}
+
+// CopySettings creates a deep copy of a Settings struct
+func CopySettings(cfg *Settings) *Settings {
+	newCfg := *cfg
+	newCfg.OscillatorLevels = append([]float64(nil), cfg.OscillatorLevels...) // Deep copy the slice
+	return &newCfg
+}
+
+// GenerateKickWaveform generates the kick waveform and returns it as a slice of float64 samples (without writing to disk).
+func (cfg *Settings) GenerateKickWaveform() ([]float64, error) {
+	numSamples := int(float64(cfg.SampleRate) * cfg.Duration)
+	samples := make([]float64, numSamples)
+
+	for i := 0; i < numSamples; i++ {
+		t := float64(i) / float64(cfg.SampleRate)
+		frequency := cfg.StartFreq * math.Pow(cfg.EndFreq/cfg.StartFreq, t/cfg.Duration)
+		var sample float64
+
+		switch cfg.WaveformType {
+		case WaveSine:
+			sample = math.Sin(2 * math.Pi * frequency * t)
+		case WaveTriangle:
+			sample = 2*math.Abs(2*((t*frequency)-math.Floor((t*frequency)+0.5))) - 1
+		case WaveSawtooth:
+			sample = 2 * (t*frequency - math.Floor(0.5+t*frequency))
+		case WaveSquare:
+			sample = math.Copysign(1.0, math.Sin(2*math.Pi*frequency*t))
+		}
+
+		sample *= cfg.OscillatorLevels[0]
+		sample *= cfg.ApplyEnvelope(t)
+		sample = cfg.ApplyDrive(sample)
+		samples[i] = sample
+	}
+
+	samples = Limiter(samples)
+	return samples, nil
+}
+
+// Play plays the generated kick sound by writing it to a temporary WAV file and playing it with an external player
+func (cfg *Settings) Play() error {
+	// Generate the kick waveform in memory
+	samples, err := cfg.GenerateKickWaveform()
+	if err != nil {
+		return err
+	}
+
+	// Save the waveform to a temporary WAV file
+	tmpFile, err := os.CreateTemp("", "kick_*.wav")
+	if err != nil {
+		return fmt.Errorf("error creating temporary file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	err = SaveToWav(tmpFile.Name(), samples, cfg.SampleRate)
+	if err != nil {
+		return err
+	}
+
+	// Play the generated WAV file using an external player (mpv or ffmpeg)
+	return PlayWav(tmpFile.Name())
+}
+
+// SaveTo saves the generated kick to a specified directory, avoiding filename collisions.
+func (cfg *Settings) SaveTo(directory string) (string, error) {
+	n := 1
+	var fileName string
+	for {
+		// Construct the file path with an incrementing number
+		fileName = filepath.Join(directory, fmt.Sprintf("kick%d.wav", n))
+		if _, err := os.Stat(fileName); os.IsNotExist(err) {
+			break
+		}
+		n++
+	}
+
+	// Create the new file
+	file, err := os.Create(fileName)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// Set the file as the output for the kick generation
+	cfg.Output = file
+
+	// Generate the kick and write to the file
+	if err := cfg.GenerateKick(); err != nil {
+		return "", err
+	}
+
+	return fileName, nil
+}
+
+// Color returns a color that very approximately represents the current kick config
+func (cfg *Settings) Color() color.RGBA {
+	hasher := sha1.New()
+	hasher.Write([]byte(fmt.Sprintf("%d%f%f%f%f%f%f%f%f", cfg.WaveformType, cfg.Attack, cfg.Decay, cfg.Sustain, cfg.Release, cfg.Drive, cfg.FilterCutoff, cfg.Sweep, cfg.PitchDecay)))
+	hashBytes := hasher.Sum(nil)
+	// Convert the first few bytes of the hash into an RGB color
+	r := hashBytes[0]
+	g := hashBytes[1]
+	b := hashBytes[2]
+	return color.RGBA{R: r, G: g, B: b, A: 255}
 }
