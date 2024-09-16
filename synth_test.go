@@ -186,7 +186,7 @@ func TestSaveAndLoadWav(t *testing.T) {
 		t.Fatalf("Failed to save WAV file: %v", err)
 	}
 
-	_, sampleRate, err := LoadWav(filename)
+	_, sampleRate, err := LoadWav(filename, false)
 	if err != nil {
 		t.Fatalf("Failed to load WAV file: %v", err)
 	}
@@ -243,7 +243,7 @@ func TestWavSaveAndLoad(t *testing.T) {
 	}
 
 	// Load the waveform back from the WAV file
-	loadedSamples, sampleRate, err := LoadWav(filename)
+	loadedSamples, sampleRate, err := LoadWav(filename, false)
 	if err != nil {
 		t.Fatalf("Failed to load WAV file: %v", err)
 	}
@@ -332,5 +332,66 @@ func TestSaveTo(t *testing.T) {
 	// Check if the file exists
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		t.Fatalf("Expected file to exist: %s", filename)
+	}
+}
+
+// TestGenerateKickWaveform checks if GenerateKickWaveform correctly generates non-zero length samples
+func TestGenerateKickWaveform(t *testing.T) {
+	cfg := &Settings{
+		StartFreq:        100.0,
+		EndFreq:          50.0,
+		Duration:         1.0,
+		SampleRate:       44100,
+		OscillatorLevels: []float64{1.0},
+	}
+
+	samples, err := cfg.GenerateKickWaveform()
+	if err != nil {
+		t.Fatalf("GenerateKickWaveform failed: %v", err)
+	}
+
+	if len(samples) == 0 {
+		t.Fatalf("Expected non-zero length waveform, got %d samples", len(samples))
+	}
+
+	// Check that the samples fall within the expected [-1.0, 1.0] range
+	for i, sample := range samples {
+		if sample > 1.0 || sample < -1.0 {
+			t.Errorf("Sample at index %d is out of range [-1, 1]: %f", i, sample)
+		}
+	}
+}
+
+// TestSaveToWavEmptySamples ensures SaveToWav does not save zero-length files
+func TestSaveToWavEmptySamples(t *testing.T) {
+	samples := []float64{} // Zero-length samples
+	filename := "test_empty_output.wav"
+	defer os.Remove(filename)
+
+	err := SaveToWav(filename, samples, 44100)
+	if err == nil {
+		t.Fatalf("Expected error when saving zero-length waveform, but got nil")
+	}
+}
+
+// TestSaveToWavNonEmptySamples ensures SaveToWav correctly saves non-zero length waveforms
+func TestSaveToWavNonEmptySamples(t *testing.T) {
+	samples := createTestWaveform(0.5, 100) // Non-zero length waveform
+	filename := "test_output_non_empty.wav"
+	defer os.Remove(filename)
+
+	err := SaveToWav(filename, samples, 44100)
+	if err != nil {
+		t.Fatalf("Failed to save non-zero length waveform: %v", err)
+	}
+
+	// Check if the file exists and is non-zero in size
+	fileInfo, err := os.Stat(filename)
+	if err != nil {
+		t.Fatalf("Failed to stat file: %v", err)
+	}
+
+	if fileInfo.Size() == 0 {
+		t.Fatalf("Expected non-zero file size, got %d bytes", fileInfo.Size())
 	}
 }
