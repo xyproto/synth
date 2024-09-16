@@ -102,10 +102,15 @@ func ApplyEnvelope(samples []float64, attack, decay, sustain, release float64, s
 // LowPassFilter applies a basic low-pass filter to the samples
 func LowPassFilter(samples []float64, cutoff float64, sampleRate int) []float64 {
 	filtered := make([]float64, len(samples))
-	alpha := 2 * math.Pi * cutoff / float64(sampleRate)
-	prev := 0.0
-	for i, sample := range samples {
-		filtered[i] = prev + alpha*(sample-prev)
+	rc := 1.0 / (2.0 * math.Pi * cutoff)
+	dt := 1.0 / float64(sampleRate)
+	alpha := dt / (rc + dt)
+
+	prev := samples[0]       // Initialize with the first sample
+	filtered[0] = samples[0] // The first sample remains the same
+
+	for i := 1; i < len(samples); i++ {
+		filtered[i] = alpha*samples[i] + (1-alpha)*prev
 		prev = filtered[i]
 	}
 	return filtered
@@ -283,7 +288,7 @@ func (cfg *Settings) ApplyDrive(sample float64) float64 {
 	return sample
 }
 
-// LinearSummation mixes multiple audio samples by adding them together.
+// LinearSummation mixes multiple audio samples by averaging them together.
 // It automatically clamps the sum to avoid overflow and distortion.
 func LinearSummation(samples ...[]float64) ([]float64, error) {
 	if len(samples) == 0 {
@@ -293,6 +298,7 @@ func LinearSummation(samples ...[]float64) ([]float64, error) {
 	numSamples := len(samples[0])
 	combined := make([]float64, numSamples)
 
+	// Sum the samples from each input
 	for i := 0; i < numSamples; i++ {
 		sum := float64(0)
 		for _, sample := range samples {
@@ -301,13 +307,18 @@ func LinearSummation(samples ...[]float64) ([]float64, error) {
 			}
 			sum += sample[i]
 		}
+
+		// Average the sum by dividing by the number of input samples
+		average := sum / float64(len(samples))
+
 		// Clamp the result to avoid overflow
-		if sum > 1 {
-			sum = 1
-		} else if sum < -1 {
-			sum = -1
+		if average > 1 {
+			combined[i] = 1
+		} else if average < -1 {
+			combined[i] = -1
+		} else {
+			combined[i] = average
 		}
-		combined[i] = sum
 	}
 
 	return combined, nil
