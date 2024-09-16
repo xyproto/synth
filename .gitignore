@@ -35,6 +35,7 @@ cmd/*/*
 !cmd/*/*.rst
 !cmd/*/*.asciidoc
 !cmd/*/*.1*
+!cmd/*/*.wav
 
 # images not in img/
 *.bmp
