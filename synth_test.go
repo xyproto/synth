@@ -396,3 +396,89 @@ func TestSaveToWavNonEmptySamples(t *testing.T) {
 		t.Fatalf("Expected non-zero file size, got %d bytes", fileInfo.Size())
 	}
 }
+
+func TestHighPassFilter(t *testing.T) {
+	samples := createTestWaveform(1.0, 100)
+	filtered := HighPassFilter(samples, 1000.0, 44100)
+
+	if len(filtered) != len(samples) {
+		t.Errorf("Expected filtered waveform length of %d, got %d", len(samples), len(filtered))
+	}
+}
+
+func TestBandPassFilter(t *testing.T) {
+	samples := createTestWaveform(1.0, 100)
+	filtered := BandPassFilter(samples, 500.0, 5000.0, 44100)
+
+	if len(filtered) != len(samples) {
+		t.Errorf("Expected filtered waveform length of %d, got %d", len(samples), len(filtered))
+	}
+}
+
+func TestSchroederReverb(t *testing.T) {
+	samples := createTestWaveform(0.5, 1000)
+	combDelays := []int{1557, 1617, 1491, 1422}
+	allPassDelays := []int{225, 556}
+	reverb := SchroederReverb(samples, 44100, 0.85, combDelays, allPassDelays)
+
+	if len(reverb) != len(samples) {
+		t.Errorf("Expected reverb waveform length of %d, got %d", len(samples), len(reverb))
+	}
+}
+
+func TestApplyPitchModulation(t *testing.T) {
+	samples := createSineWave(440.0, 100, 44100)
+	modulated := ApplyPitchModulation(samples, 5.0, 0.2, 44100)
+
+	if len(modulated) != len(samples) {
+		t.Errorf("Expected modulated waveform length of %d, got %d", len(samples), len(modulated))
+	}
+}
+
+func TestApplyPanning(t *testing.T) {
+	samples := createTestWaveform(0.5, 100)
+	left, right := ApplyPanning(samples, 0.5)
+
+	if len(left) != len(right) || len(left) != len(samples) {
+		t.Errorf("Expected panned waveform lengths to match the input, got %d and %d", len(left), len(right))
+	}
+}
+
+func TestGenerateNoise(t *testing.T) {
+	length := 100
+	whiteNoise := GenerateNoise(NoiseWhite, length, 0.5)
+	pinkNoise := GenerateNoise(NoisePink, length, 0.5)
+	brownNoise := GenerateNoise(NoiseBrown, length, 0.5)
+
+	if len(whiteNoise) != length || len(pinkNoise) != length || len(brownNoise) != length {
+		t.Errorf("Expected noise of length %d, got different lengths", length)
+	}
+}
+
+func TestApplyFrequencyModulation(t *testing.T) {
+	samples := createSineWave(440.0, 100, 44100)
+	modulated := ApplyFrequencyModulation(samples, 5.0, 0.2, 44100)
+
+	if len(modulated) != len(samples) {
+		t.Errorf("Expected modulated waveform length of %d, got %d", len(samples), len(modulated))
+	}
+}
+
+func TestGenerateKick(t *testing.T) {
+	cfg := &Settings{
+		StartFreq:        100.0,
+		EndFreq:          50.0,
+		SampleRate:       44100,
+		Duration:         1.0,
+		Attack:           0.1,
+		Decay:            0.3,
+		Sustain:          0.5,
+		Release:          0.4,
+		OscillatorLevels: []float64{1.0},
+	}
+
+	err := cfg.GenerateKick()
+	if err != nil {
+		t.Fatalf("GenerateKick failed: %v", err)
+	}
+}

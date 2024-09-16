@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"io"
 	"math"
+	"math/rand/v2"
 )
 
 // Constants for waveform types
@@ -430,4 +431,130 @@ func (cfg *Settings) Color() color.RGBA {
 	g := hashBytes[1]
 	b := hashBytes[2]
 	return color.RGBA{R: r, G: g, B: b, A: 255}
+}
+
+// HighPassFilter applies a basic high-pass filter to the samples
+func HighPassFilter(samples []float64, cutoff float64, sampleRate int) []float64 {
+	filtered := make([]float64, len(samples))
+	rc := 1.0 / (2.0 * math.Pi * cutoff)
+	dt := 1.0 / float64(sampleRate)
+	alpha := rc / (rc + dt)
+
+	filtered[0] = samples[0] // The first sample remains the same
+
+	for i := 1; i < len(samples); i++ {
+		filtered[i] = alpha * (filtered[i-1] + samples[i] - samples[i-1])
+	}
+	return filtered
+}
+
+// BandPassFilter applies a band-pass filter to the samples
+func BandPassFilter(samples []float64, lowCutoff, highCutoff float64, sampleRate int) []float64 {
+	lowPassed := LowPassFilter(samples, highCutoff, sampleRate)
+	return HighPassFilter(lowPassed, lowCutoff, sampleRate)
+}
+
+// SchroederReverb applies a high-quality reverb effect using the Schroeder algorithm
+func SchroederReverb(samples []float64, sampleRate int, decayFactor float64, combDelays []int, allPassDelays []int) []float64 {
+	if len(combDelays) != 4 || len(allPassDelays) != 2 {
+		panic("SchroederReverb expects 4 comb delays and 2 all-pass delays")
+	}
+
+	// Create buffers for the comb filters
+	combBuffers := make([][]float64, 4)
+	for i := range combBuffers {
+		combBuffers[i] = make([]float64, combDelays[i])
+	}
+
+	// Apply comb filters
+	combFiltered := make([]float64, len(samples))
+	for i := range samples {
+		for j := range combBuffers {
+			delayIndex := i % combDelays[j]
+			combBuffers[j][delayIndex] = samples[i] + combBuffers[j][delayIndex]*decayFactor
+			combFiltered[i] += combBuffers[j][delayIndex]
+		}
+		combFiltered[i] /= 4 // Average the comb outputs
+	}
+
+	// Create buffers for the all-pass filters
+	allPassBuffers := make([][]float64, 2)
+	for i := range allPassBuffers {
+		allPassBuffers[i] = make([]float64, allPassDelays[i])
+	}
+
+	// Apply all-pass filters
+	reverbOutput := make([]float64, len(combFiltered))
+	for i := range combFiltered {
+		for j := range allPassBuffers {
+			delayIndex := i % allPassDelays[j]
+			buf := allPassBuffers[j][delayIndex]
+			allPassBuffers[j][delayIndex] = combFiltered[i] + buf*decayFactor
+			reverbOutput[i] = allPassBuffers[j][delayIndex] - buf
+		}
+	}
+
+	return reverbOutput
+}
+
+// ApplyPitchModulation applies low-frequency oscillation (LFO) to modulate the pitch of the waveform
+func ApplyPitchModulation(samples []float64, modFreq, modDepth float64, sampleRate int) []float64 {
+	modulated := make([]float64, len(samples))
+	for i := 0; i < len(samples); i++ {
+		t := float64(i) / float64(sampleRate)
+		mod := math.Sin(2*math.Pi*modFreq*t) * modDepth
+		modulated[i] = samples[i] * math.Pow(2, mod)
+	}
+	return modulated
+}
+
+// ApplyPanning applies stereo panning to the samples. pan should be in the range [-1, 1], where -1 is full left and 1 is full right.
+func ApplyPanning(samples []float64, pan float64) ([]float64, []float64) {
+	leftChannel := make([]float64, len(samples))
+	rightChannel := make([]float64, len(samples))
+	leftGain := (1 - pan) / 2
+	rightGain := (1 + pan) / 2
+
+	for i := range samples {
+		leftChannel[i] = samples[i] * leftGain
+		rightChannel[i] = samples[i] * rightGain
+	}
+
+	return leftChannel, rightChannel
+}
+
+// GenerateNoise generates noise based on the selected noise type
+func GenerateNoise(noiseType int, length int, amount float64) []float64 {
+	noise := make([]float64, length)
+	switch noiseType {
+	case NoiseWhite:
+		for i := range noise {
+			noise[i] = (rand.Float64()*2 - 1) * amount
+		}
+	case NoisePink:
+		// Simple pink noise generation (more complex implementations exist)
+		for i := range noise {
+			noise[i] = (rand.Float64()*2 - 1) * amount * math.Pow(1/float64(i+1), 0.5)
+		}
+	case NoiseBrown:
+		// Brownian noise generation
+		prev := 0.0
+		for i := range noise {
+			change := (rand.Float64()*2 - 1) * amount / 10
+			noise[i] = prev + change
+			prev = noise[i]
+		}
+	}
+	return noise
+}
+
+// ApplyFrequencyModulation applies frequency modulation to a waveform using a modulator frequency and depth
+func ApplyFrequencyModulation(samples []float64, modFreq, modDepth float64, sampleRate int) []float64 {
+	modulated := make([]float64, len(samples))
+	for i := range samples {
+		t := float64(i) / float64(sampleRate)
+		modulator := math.Sin(2*math.Pi*modFreq*t) * modDepth
+		modulated[i] = math.Sin(2*math.Pi*t*modulator) * samples[i]
+	}
+	return modulated
 }
