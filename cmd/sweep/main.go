@@ -60,10 +60,10 @@ func main() {
 	limited := synth.Limiter(driven)
 
 	// Save the generated sound to a .wav file
-	if err := synth.SaveToWav("output.wav", limited, sampleRate); err != nil {
+	if err := synth.SaveToWav("sweep.wav", limited, sampleRate); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
 
-	fmt.Println("Successfully generated 'output.wav'")
+	fmt.Println("Successfully generated 'sweep.wav'")
 }
