@@ -229,3 +229,108 @@ func TestFindPeakAmplitude(t *testing.T) {
 		t.Errorf("Expected peak amplitude of %f, got %f", expectedPeak, peak)
 	}
 }
+
+func TestWavSaveAndLoad(t *testing.T) {
+	// Create a test waveform with values in the [-1.0, 1.0] range
+	samples := createTestWaveform(0.5, 100)
+	filename := "test_wav_output.wav"
+	defer os.Remove(filename)
+
+	// Save the waveform to a WAV file
+	err := SaveToWav(filename, samples, 44100)
+	if err != nil {
+		t.Fatalf("Failed to save WAV file: %v", err)
+	}
+
+	// Load the waveform back from the WAV file
+	loadedSamples, sampleRate, err := LoadWav(filename)
+	if err != nil {
+		t.Fatalf("Failed to load WAV file: %v", err)
+	}
+
+	// Ensure the sample rate matches
+	if sampleRate != 44100 {
+		t.Errorf("Expected sample rate of 44100, got %d", sampleRate)
+	}
+
+	// Ensure the samples match within a small tolerance (due to potential floating-point inaccuracies)
+	tolerance := 0.0001
+	for i, sample := range samples {
+		if math.Abs(sample-loadedSamples[i]) > tolerance {
+			t.Errorf("Loaded sample at index %d differs from original: expected %f, got %f", i, sample, loadedSamples[i])
+		}
+	}
+}
+
+// TestLimiter tests if the Limiter correctly clamps values to the [-1, 1] range
+func TestLimiter(t *testing.T) {
+	// Create a test waveform with values that exceed [-1, 1]
+	samples := []float64{1.5, -1.2, 0.5, -0.8, 2.0}
+
+	limited := Limiter(samples)
+
+	for i, v := range limited {
+		if v > 1.0 {
+			t.Errorf("Limiter failed at index %d: expected value <= 1.0, got %f", i, v)
+		}
+		if v < -1.0 {
+			t.Errorf("Limiter failed at index %d: expected value >= -1.0, got %f", i, v)
+		}
+	}
+}
+
+// TestCopySettings tests if CopySettings correctly copies the settings
+func TestCopySettings(t *testing.T) {
+	original := &Settings{
+		StartFreq:        100.0,
+		EndFreq:          50.0,
+		Duration:         1.0,
+		SampleRate:       44100,
+		Attack:           0.1,
+		Decay:            0.3,
+		Sustain:          0.5,
+		Release:          0.4,
+		Drive:            0.2,
+		FilterCutoff:     5000,
+		Sweep:            0.7,
+		PitchDecay:       0.5,
+		OscillatorLevels: []float64{1.0, 0.8, 0.6},
+	}
+
+	copy := CopySettings(original)
+
+	// Test deep copy of slice
+	original.OscillatorLevels[0] = 0.5
+	if copy.OscillatorLevels[0] == 0.5 {
+		t.Error("CopySettings did not perform a deep copy of OscillatorLevels")
+	}
+
+	// Test other fields
+	if original.StartFreq != copy.StartFreq || original.EndFreq != copy.EndFreq {
+		t.Error("CopySettings did not copy frequency settings correctly")
+	}
+}
+
+// TestSaveTo tests the SaveTo function
+func TestSaveTo(t *testing.T) {
+	cfg := &Settings{
+		StartFreq:        100.0,
+		EndFreq:          50.0,
+		SampleRate:       44100,
+		Duration:         1.0,
+		OscillatorLevels: []float64{1.0},
+	}
+
+	// Test saving the generated waveform to a .wav file
+	filename, err := cfg.SaveTo(".")
+	defer os.Remove(filename) // Cleanup after test
+
+	if err != nil {
+		t.Fatalf("SaveTo failed: %v", err)
+	}
+
+	// Check if the file exists
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		t.Fatalf("Expected file to exist: %s", filename)
+	}
+}
