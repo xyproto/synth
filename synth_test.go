@@ -294,38 +294,6 @@ func TestLimiter(t *testing.T) {
 	}
 }
 
-// TestCopySettings tests if CopySettings correctly copies the settings
-func TestCopySettings(t *testing.T) {
-	original := &Settings{
-		StartFreq:        100.0,
-		EndFreq:          50.0,
-		Duration:         1.0,
-		SampleRate:       44100,
-		Attack:           0.1,
-		Decay:            0.3,
-		Sustain:          0.5,
-		Release:          0.4,
-		Drive:            0.2,
-		FilterCutoff:     5000,
-		Sweep:            0.7,
-		PitchDecay:       0.5,
-		OscillatorLevels: []float64{1.0, 0.8, 0.6},
-	}
-
-	copy := CopySettings(original)
-
-	// Test deep copy of slice
-	original.OscillatorLevels[0] = 0.5
-	if copy.OscillatorLevels[0] == 0.5 {
-		t.Error("CopySettings did not perform a deep copy of OscillatorLevels")
-	}
-
-	// Test other fields
-	if original.StartFreq != copy.StartFreq || original.EndFreq != copy.EndFreq {
-		t.Error("CopySettings did not copy frequency settings correctly")
-	}
-}
-
 // TestSaveTo tests the SaveTo function
 func TestSaveTo(t *testing.T) {
 	cfg := &Settings{
@@ -425,35 +393,12 @@ func TestSaveToWavNonEmptySamples(t *testing.T) {
 	}
 }
 
-func TestHighPassFilter(t *testing.T) {
-	samples := createTestWaveform(1.0, 100)
-	filtered := HighPassFilter(samples, 1000.0, 44100)
-
-	if len(filtered) != len(samples) {
-		t.Errorf("Expected filtered waveform length of %d, got %d", len(samples), len(filtered))
-	}
-}
-
 func TestBandPassFilter(t *testing.T) {
 	samples := createTestWaveform(1.0, 100)
 	filtered := BandPassFilter(samples, 500.0, 5000.0, 44100)
 
 	if len(filtered) != len(samples) {
 		t.Errorf("Expected filtered waveform length of %d, got %d", len(samples), len(filtered))
-	}
-}
-
-func TestSchroederReverb(t *testing.T) {
-	samples := createTestWaveform(0.5, 1000)
-	combDelays := []int{1557, 1617, 1491, 1422}
-	allPassDelays := []int{225, 556}
-	reverb, err := SchroederReverb(samples, 44100, 0.85, combDelays, allPassDelays)
-	if err != nil {
-		t.Fatalf("SchroederReverb failed: %v", err)
-	}
-
-	if len(reverb) != len(samples) {
-		t.Errorf("Expected reverb waveform length of %d, got %d", len(samples), len(reverb))
 	}
 }
 
@@ -514,5 +459,427 @@ func TestGenerateKick(t *testing.T) {
 	err := cfg.GenerateKick()
 	if err == nil {
 		t.Fatalf("Expected error due to nil Output, but got nil")
+	}
+}
+
+func TestHighPassFilter(t *testing.T) {
+	samples := createTestWaveform(1.0, 100)
+	filtered := HighPassFilter(samples, 1000.0, 44100)
+
+	if len(filtered) != len(samples) {
+		t.Errorf("Expected filtered waveform length of %d, got %d", len(samples), len(filtered))
+	}
+
+	// Check that the high frequencies are retained
+	if filtered[0] != samples[0] {
+		t.Errorf("Expected first sample to be unchanged, got %f", filtered[0])
+	}
+}
+
+func TestSchroederReverb(t *testing.T) {
+	samples := createTestWaveform(0.5, 1000)
+	combDelays := []int{1557, 1617, 1491, 1422}
+	allPassDelays := []int{225, 556}
+	reverb, err := SchroederReverb(samples, 44100, 0.85, combDelays, allPassDelays)
+	if err != nil {
+		t.Fatalf("SchroederReverb failed: %v", err)
+	}
+
+	if len(reverb) != len(samples) {
+		t.Errorf("Expected reverb waveform length of %d, got %d", len(samples), len(reverb))
+	}
+}
+
+func TestApplyChorus(t *testing.T) {
+	samples := createTestWaveform(0.5, 100)
+	sampleRate := 44100
+	delaySec := 0.005
+	depth := 0.5
+	rate := 1.5
+	modulated := ApplyChorus(samples, sampleRate, delaySec, depth, rate)
+
+	if len(modulated) != len(samples) {
+		t.Errorf("Expected chorus-modulated waveform length of %d, got %d", len(samples), len(modulated))
+	}
+}
+
+func TestGenerateSweepWaveform(t *testing.T) {
+	cfg := &Settings{
+		StartFreq:    100.0,
+		EndFreq:      1000.0,
+		SampleRate:   44100,
+		Duration:     1.0,
+		WaveformType: WaveSine,
+	}
+
+	samples, err := cfg.GenerateSweepWaveform()
+	if err != nil {
+		t.Fatalf("GenerateSweepWaveform failed: %v", err)
+	}
+
+	if len(samples) != int(cfg.Duration*float64(cfg.SampleRate)) {
+		t.Errorf("Expected sweep waveform length of %d, got %d", int(cfg.Duration*float64(cfg.SampleRate)), len(samples))
+	}
+}
+
+func TestColor(t *testing.T) {
+	cfg := &Settings{
+		WaveformType: WaveSine,
+		Attack:       0.1,
+		Decay:        0.2,
+		Sustain:      0.7,
+		Release:      0.3,
+		Drive:        0.5,
+		FilterCutoff: 5000,
+		Sweep:        0.2,
+		PitchDecay:   0.1,
+	}
+
+	color := cfg.Color()
+	// Since the color is based on a hash, we can't predict it, but we can check if it's properly formed
+	if color.A != 255 {
+		t.Errorf("Expected alpha value of 255, got %d", color.A)
+	}
+}
+
+func TestCopySettings(t *testing.T) {
+	original := &Settings{
+		StartFreq:        440.0,
+		EndFreq:          880.0,
+		Duration:         1.0,
+		SampleRate:       44100,
+		WaveformType:     WaveSine,
+		OscillatorLevels: []float64{1.0, 0.8},
+	}
+
+	copy := CopySettings(original)
+	if original == copy {
+		t.Error("CopySettings did not create a new instance")
+	}
+
+	// Modify the original and check if the copy remains unchanged
+	original.OscillatorLevels[0] = 0.5
+	if copy.OscillatorLevels[0] != 1.0 {
+		t.Error("CopySettings did not perform a deep copy of OscillatorLevels")
+	}
+}
+
+func TestGenerateNoiseTypes(t *testing.T) {
+	length := 1000
+	amount := 0.5
+	tolerance := 0.05 // Allow a 10% tolerance
+	noiseTypes := []int{NoiseWhite, NoisePink, NoiseBrown}
+
+	for _, noiseType := range noiseTypes {
+		noise := GenerateNoise(noiseType, length, amount)
+		if len(noise) != length {
+			t.Errorf("Expected noise length of %d, got %d for noise type %d", length, len(noise), noiseType)
+		}
+
+		for i, v := range noise {
+			if v < -(amount+tolerance) || v > (amount+tolerance) {
+				t.Errorf("Noise value at index %d out of range [%.6f, %.6f]: %f", i, -(amount + tolerance), amount+tolerance, v)
+			}
+		}
+	}
+}
+
+func TestApplyPanningExtremes(t *testing.T) {
+	samples := createTestWaveform(0.5, 100)
+	tolerance := 1e-6
+
+	// Full left
+	left, right := ApplyPanning(samples, -1.0)
+	for i := range samples {
+		if math.Abs(right[i]) > tolerance {
+			t.Errorf("Expected right channel to be silent at full left pan, got %f at index %d", right[i], i)
+		}
+	}
+
+	// Full right
+	left, right = ApplyPanning(samples, 1.0)
+	for i := range samples {
+		if math.Abs(left[i]) > tolerance {
+			t.Errorf("Expected left channel to be silent at full right pan, got %f at index %d", left[i], i)
+		}
+	}
+}
+
+func TestApplyFrequencyModulationBounds(t *testing.T) {
+	samples := createSineWave(440.0, 1000, 44100)
+	modFreq := 5.0
+	modDepth := 0.1
+	modulated := ApplyFrequencyModulation(samples, modFreq, modDepth, 44100)
+
+	if len(modulated) != len(samples) {
+		t.Errorf("Expected modulated waveform length of %d, got %d", len(samples), len(modulated))
+	}
+
+	// Check that the modulated samples are within the [-1, 1] range
+	for i, v := range modulated {
+		if v < -1.0 || v > 1.0 {
+			t.Errorf("Modulated sample at index %d out of range [-1, 1]: %f", i, v)
+		}
+	}
+}
+
+func TestApplyPitchModulationBounds(t *testing.T) {
+	samples := createSineWave(440.0, 1000, 44100)
+	modFreq := 5.0
+	modDepth := 0.1
+	modulated := ApplyPitchModulation(samples, modFreq, modDepth, 44100)
+
+	if len(modulated) != len(samples) {
+		t.Errorf("Expected modulated waveform length of %d, got %d", len(samples), len(modulated))
+	}
+
+	tolerance := 0.01 // Allow a small tolerance
+	for i, v := range modulated {
+		if v < -1.0-tolerance || v > 1.0+tolerance {
+			t.Errorf("Pitch-modulated sample at index %d out of range [-1, 1] with tolerance %f: %f", i, tolerance, v)
+		}
+	}
+}
+
+func TestApplyDriveNoGain(t *testing.T) {
+	samples := createTestWaveform(0.5, 100)
+	driven := Drive(samples, 1.0) // Gain of 1.0 should not alter the samples
+
+	for i, v := range driven {
+		if v != samples[i] {
+			t.Errorf("Expected driven sample to equal original at index %d, got %f", i, v)
+		}
+	}
+}
+
+func TestApplyDriveHighGain(t *testing.T) {
+	samples := createTestWaveform(0.5, 100)
+	gain := 10.0
+	driven := Drive(samples, gain)
+
+	// All samples should be clipped to 1.0
+	for i, v := range driven {
+		if v != 1.0 {
+			t.Errorf("Expected driven sample to be clipped at 1.0 at index %d, got %f", i, v)
+		}
+	}
+}
+
+func TestLimiterNoClipping(t *testing.T) {
+	samples := createTestWaveform(0.5, 100)
+	limited := Limiter(samples)
+
+	for i, v := range limited {
+		if v != samples[i] {
+			t.Errorf("Expected limiter to not alter sample at index %d, got %f", i, v)
+		}
+	}
+}
+
+func TestLimiterClipping(t *testing.T) {
+	samples := createTestWaveform(1.5, 100) // Samples exceeding 1.0
+	limited := Limiter(samples)
+
+	for i, v := range limited {
+		if v != 1.0 {
+			t.Errorf("Expected limiter to clip sample at index %d to 1.0, got %f", i, v)
+		}
+	}
+}
+
+func TestFindPeakAmplitudeZeroSamples(t *testing.T) {
+	samples := []float64{}
+	peak := FindPeakAmplitude(samples)
+	if peak != 0.0 {
+		t.Errorf("Expected peak amplitude of 0.0 for empty samples, got %f", peak)
+	}
+}
+
+func TestNormalizeSamplesZeroPeak(t *testing.T) {
+	samples := createTestWaveform(0.0, 100)
+	normalized := NormalizeSamples(samples, 1.0)
+
+	for i, v := range normalized {
+		if v != 0.0 {
+			t.Errorf("Expected normalized sample to be 0.0 at index %d, got %f", i, v)
+		}
+	}
+}
+
+func TestPadSamplesEqualLength(t *testing.T) {
+	wave1 := createTestWaveform(0.5, 100)
+	wave2 := createTestWaveform(0.5, 100)
+
+	padded1, padded2 := PadSamples(wave1, wave2)
+	if len(padded1) != 100 || len(padded2) != 100 {
+		t.Errorf("Expected padded waves to have length 100, got %d and %d", len(padded1), len(padded2))
+	}
+}
+
+func TestPadSamplesFirstShorter(t *testing.T) {
+	wave1 := createTestWaveform(0.5, 50)
+	wave2 := createTestWaveform(0.5, 100)
+
+	padded1, padded2 := PadSamples(wave1, wave2)
+	if len(padded1) != 100 || len(padded2) != 100 {
+		t.Errorf("Expected padded waves to have length 100, got %d and %d", len(padded1), len(padded2))
+	}
+}
+
+func TestPadSamplesSecondShorter(t *testing.T) {
+	wave1 := createTestWaveform(0.5, 100)
+	wave2 := createTestWaveform(0.5, 50)
+
+	padded1, padded2 := PadSamples(wave1, wave2)
+	if len(padded1) != 100 || len(padded2) != 100 {
+		t.Errorf("Expected padded waves to have length 100, got %d and %d", len(padded1), len(padded2))
+	}
+}
+
+func TestAnalyzeHighestFrequencyZeroSamples(t *testing.T) {
+	samples := []float64{}
+	frequency := AnalyzeHighestFrequency(samples, 44100)
+	if frequency != 0.0 {
+		t.Errorf("Expected frequency of 0.0 for empty samples, got %f", frequency)
+	}
+}
+
+func TestAnalyzeHighestFrequencyConstantSignal(t *testing.T) {
+	samples := createTestWaveform(1.0, 1000)
+	frequency := AnalyzeHighestFrequency(samples, 44100)
+	if frequency != 0.0 {
+		t.Errorf("Expected frequency of 0.0 for constant signal, got %f", frequency)
+	}
+}
+
+func TestWeightedSummationZeroWeights(t *testing.T) {
+	wave1 := createTestWaveform(0.5, 100)
+	wave2 := createTestWaveform(0.5, 100)
+	weights := []float64{0.0, 0.0}
+
+	result, err := WeightedSummation(weights, wave1, wave2)
+	if err != nil {
+		t.Fatalf("WeightedSummation failed: %v", err)
+	}
+
+	for i, v := range result {
+		if v != 0.0 {
+			t.Errorf("Expected summed sample to be 0.0 at index %d, got %f", i, v)
+		}
+	}
+}
+
+func TestWeightedSummationNegativeWeights(t *testing.T) {
+	wave1 := createTestWaveform(0.5, 100)
+	wave2 := createTestWaveform(0.5, 100)
+	weights := []float64{-1.0, -1.0}
+
+	result, err := WeightedSummation(weights, wave1, wave2)
+	if err != nil {
+		t.Fatalf("WeightedSummation failed: %v", err)
+	}
+
+	for i, v := range result {
+		if v != -1.0 {
+			t.Errorf("Expected summed sample to be -1.0 at index %d, got %f", i, v)
+		}
+	}
+}
+
+func TestApplyFadeInLinear(t *testing.T) {
+	samples := make([]float64, 100)
+	for i := range samples {
+		samples[i] = 1.0
+	}
+
+	// Keep a copy of the original samples
+	originalSamples := make([]float64, len(samples))
+	copy(originalSamples, samples)
+
+	fadeDuration := 0.5 // seconds
+	sampleRate := 100   // for simplicity
+	fadedSamples := ApplyFadeIn(samples, fadeDuration, sampleRate, LinearFade)
+	expectedFadeSamples := int(fadeDuration * float64(sampleRate))
+	for i := 0; i < expectedFadeSamples; i++ {
+		expectedMultiplier := float64(i) / float64(expectedFadeSamples)
+		expectedValue := originalSamples[i] * expectedMultiplier
+		if math.Abs(fadedSamples[i]-expectedValue) > 1e-6 {
+			t.Errorf("Linear fade-in not applied correctly at index %d: expected %f, got %f", i, expectedValue, fadedSamples[i])
+		}
+	}
+}
+
+func TestApplyFadeInQuadratic(t *testing.T) {
+	samples := make([]float64, 100)
+	for i := range samples {
+		samples[i] = 1.0
+	}
+
+	// Keep a copy of the original samples
+	originalSamples := make([]float64, len(samples))
+	copy(originalSamples, samples)
+
+	fadeDuration := 0.5 // seconds
+	sampleRate := 100   // for simplicity
+	fadedSamples := ApplyFadeIn(samples, fadeDuration, sampleRate, QuadraticFade)
+	expectedFadeSamples := int(fadeDuration * float64(sampleRate))
+	for i := 0; i < expectedFadeSamples; i++ {
+		tVal := float64(i) / float64(expectedFadeSamples)
+		expectedMultiplier := tVal * tVal
+		expectedValue := originalSamples[i] * expectedMultiplier
+		if math.Abs(fadedSamples[i]-expectedValue) > 1e-6 {
+			t.Errorf("Quadratic fade-in not applied correctly at index %d: expected %f, got %f", i, expectedValue, fadedSamples[i])
+		}
+	}
+}
+
+func TestApplyFadeOutLinear(t *testing.T) {
+	samples := make([]float64, 100)
+	for i := range samples {
+		samples[i] = 1.0
+	}
+
+	// Keep a copy of the original samples
+	originalSamples := make([]float64, len(samples))
+	copy(originalSamples, samples)
+
+	fadeDuration := 0.5 // seconds
+	sampleRate := 100   // for simplicity
+	fadedSamples := ApplyFadeOut(samples, fadeDuration, sampleRate, LinearFade)
+	expectedFadeSamples := int(fadeDuration * float64(sampleRate))
+	totalSamples := len(samples)
+	for i := 0; i < expectedFadeSamples; i++ {
+		expectedMultiplier := 1.0 - float64(i)/float64(expectedFadeSamples)
+		index := totalSamples - expectedFadeSamples + i
+		expectedValue := originalSamples[index] * expectedMultiplier
+		if math.Abs(fadedSamples[index]-expectedValue) > 1e-6 {
+			t.Errorf("Linear fade-out not applied correctly at index %d: expected %f, got %f", index, expectedValue, fadedSamples[index])
+		}
+	}
+}
+
+func TestApplyFadeOutQuadratic(t *testing.T) {
+	samples := make([]float64, 100)
+	for i := range samples {
+		samples[i] = 1.0
+	}
+
+	// Keep a copy of the original samples
+	originalSamples := make([]float64, len(samples))
+	copy(originalSamples, samples)
+
+	fadeDuration := 0.5 // seconds
+	sampleRate := 100   // for simplicity
+	fadedSamples := ApplyFadeOut(samples, fadeDuration, sampleRate, QuadraticFade)
+	expectedFadeSamples := int(fadeDuration * float64(sampleRate))
+	totalSamples := len(samples)
+	for i := 0; i < expectedFadeSamples; i++ {
+		tVal := 1.0 - float64(i)/float64(expectedFadeSamples)
+		expectedMultiplier := tVal * tVal
+		index := totalSamples - expectedFadeSamples + i
+		expectedValue := originalSamples[index] * expectedMultiplier
+		if math.Abs(fadedSamples[index]-expectedValue) > 1e-6 {
+			t.Errorf("Quadratic fade-out not applied correctly at index %d: expected %f, got %f", index, expectedValue, fadedSamples[index])
+		}
 	}
 }

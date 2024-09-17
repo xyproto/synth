@@ -54,6 +54,9 @@ type Settings struct {
 	SmoothFrequencyTransitions bool
 }
 
+// FadeCurve defines a type for fade curve functions
+type FadeCurve func(t float64) float64
+
 // SawtoothOscillator generates a sawtooth waveform at a specific frequency
 func SawtoothOscillator(freq float64, length int, sampleRate int) []float64 {
 	osc := make([]float64, length)
@@ -518,13 +521,19 @@ func SchroederReverb(samples []float64, sampleRate int, decayFactor float64, com
 	return reverbOutput, nil
 }
 
-// ApplyPitchModulation applies low-frequency oscillation (LFO) to modulate the pitch of the waveform
 func ApplyPitchModulation(samples []float64, modFreq, modDepth float64, sampleRate int) []float64 {
 	modulated := make([]float64, len(samples))
 	for i := 0; i < len(samples); i++ {
 		t := float64(i) / float64(sampleRate)
 		mod := math.Sin(2*math.Pi*modFreq*t) * modDepth
-		modulated[i] = samples[i] * math.Pow(2, mod)
+		value := samples[i] * math.Pow(2, mod)
+		// Clamp the value
+		if value > 1.0 {
+			value = 1.0
+		} else if value < -1.0 {
+			value = -1.0
+		}
+		modulated[i] = value
 	}
 	return modulated
 }
@@ -563,17 +572,31 @@ func GenerateNoise(noiseType int, length int, amount float64) []float64 {
 			b3 = 0.86650*b3 + white*0.3104856
 			b4 = 0.55000*b4 + white*0.5329522
 			b5 = -0.7616*b5 - white*0.0168980
-			noise[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white*0.5362) * amount / 3.5
+			value := (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white*0.5362) * amount / 3.5
 			b6 = white * 0.115926
+			// Clamp the value
+			if value > amount {
+				value = amount
+			} else if value < -amount {
+				value = -amount
+			}
+			noise[i] = value
 		}
 	case NoiseBrown:
 		// Brownian noise generation
 		var lastOutput float64
 		for i := range noise {
 			white := (rand.Float64()*2 - 1) * amount / 10
-			noise[i] = (lastOutput + (0.02 * white)) / 1.02
-			lastOutput = noise[i]
-			noise[i] *= 3.5 // (roughly) compensate for gain
+			value := (lastOutput + (0.02 * white)) / 1.02
+			lastOutput = value
+			value *= 3.5 // (roughly) compensate for gain
+			// Clamp the value
+			if value > amount {
+				value = amount
+			} else if value < -amount {
+				value = -amount
+			}
+			noise[i] = value
 		}
 	}
 	return noise
@@ -593,28 +616,30 @@ func ApplyFrequencyModulation(samples []float64, modFreq, modDepth float64, samp
 	return modulated
 }
 
-// ApplyFadeIn applies a linear fade-in to the start of the samples
-func ApplyFadeIn(samples []float64, fadeDuration float64, sampleRate int) []float64 {
+// ApplyFadeIn applies a fade-in to the start of the samples using the specified fade curve
+func ApplyFadeIn(samples []float64, fadeDuration float64, sampleRate int, curve FadeCurve) []float64 {
 	fadeSamples := int(fadeDuration * float64(sampleRate))
 	if fadeSamples > len(samples) {
 		fadeSamples = len(samples)
 	}
 	for i := 0; i < fadeSamples; i++ {
-		multiplier := float64(i) / float64(fadeSamples)
+		t := float64(i) / float64(fadeSamples)
+		multiplier := curve(t)
 		samples[i] *= multiplier
 	}
 	return samples
 }
 
-// ApplyFadeOut applies a linear fade-out to the end of the samples
-func ApplyFadeOut(samples []float64, fadeDuration float64, sampleRate int) []float64 {
+// ApplyFadeOut applies a fade-out to the end of the samples using the specified fade curve
+func ApplyFadeOut(samples []float64, fadeDuration float64, sampleRate int, curve FadeCurve) []float64 {
 	totalSamples := len(samples)
 	fadeSamples := int(fadeDuration * float64(sampleRate))
 	if fadeSamples > totalSamples {
 		fadeSamples = totalSamples
 	}
 	for i := 0; i < fadeSamples; i++ {
-		multiplier := 1.0 - float64(i)/float64(fadeSamples)
+		t := float64(i) / float64(fadeSamples)
+		multiplier := curve(1.0 - t)
 		index := totalSamples - fadeSamples + i
 		if index >= 0 && index < totalSamples {
 			samples[index] *= multiplier
@@ -669,4 +694,32 @@ func ApplyChorus(samples []float64, sampleRate int, delaySec float64, depth floa
 		}
 	}
 	return modulated
+}
+
+// LinearFade is a linear fade curve
+func LinearFade(t float64) float64 {
+	return t
+}
+
+// QuadraticFade is a quadratic (ease-in) fade curve
+func QuadraticFade(t float64) float64 {
+	return t * t
+}
+
+// ExponentialFade is an exponential fade curve
+func ExponentialFade(t float64) float64 {
+	return math.Pow(2, 10*(t-1))
+}
+
+// LogarithmicFade is a logarithmic fade curve
+func LogarithmicFade(t float64) float64 {
+	if t == 0 {
+		return 0
+	}
+	return math.Log10(t*9 + 1)
+}
+
+// SineFade is a sinusoidal fade curve
+func SineFade(t float64) float64 {
+	return math.Sin((t * math.Pi) / 2)
 }
