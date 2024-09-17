@@ -10,7 +10,7 @@ import (
 	"github.com/xyproto/synth"
 )
 
-const version = "0.0.2"
+const version = "0.0.3"
 
 func main() {
 	// Drum style flags
@@ -32,7 +32,7 @@ func main() {
 	attack := flag.Float64("attack", 0.003, "Attack time in seconds")
 	decay := flag.Float64("decay", 0.3, "Decay time in seconds")
 	sustain := flag.Float64("sustain", 0.1, "Sustain level (0.0 to 1.0)")
-	release := flag.Float64("release", 0.15, "Release time in seconds")
+	release := flag.Float64("release", 0.25, "Release time in seconds") // Increased release time
 	sweep := flag.Float64("sweep", 0.8, "Pitch sweep rate")
 	filterCutoff := flag.Float64("filter", 5000.0, "Low-pass filter cutoff frequency (Hz)")
 	pitchDecay := flag.Float64("pitchdecay", 0.2, "Pitch envelope decay time")
@@ -72,38 +72,32 @@ func main() {
 		os.Exit(1)
 	}
 
-	outFile, err := os.Create(*outputFile)
-	if err != nil {
-		fmt.Println("Failed to create output file:", err)
-		return
-	}
-	defer outFile.Close()
-
 	var cfg *synth.Settings
+	var err error
 	switch {
 	case *kick606:
-		cfg, err = synth.New606(sampleRate, *length/1000.0, *bitDepth, outFile)
+		cfg, err = synth.New606(sampleRate, *length/1000.0, *bitDepth, nil)
 		fmt.Println("Generating 606 kick with a punchy, shorter sound.")
 	case *kick707:
-		cfg, err = synth.New707(sampleRate, *length/1000.0, *bitDepth, outFile)
+		cfg, err = synth.New707(sampleRate, *length/1000.0, *bitDepth, nil)
 		fmt.Println("Generating 707 kick with a classic, shorter punchy sound.")
 	case *kick808:
-		cfg, err = synth.New808(sampleRate, *length/1000.0, *bitDepth, outFile)
+		cfg, err = synth.New808(sampleRate, *length/1000.0, *bitDepth, nil)
 		fmt.Println("Generating 808 kick with deep sub-bass and smooth characteristics.")
 	case *kick909:
-		cfg, err = synth.New909(sampleRate, *length/1000.0, *bitDepth, outFile)
+		cfg, err = synth.New909(sampleRate, *length/1000.0, *bitDepth, nil)
 		fmt.Println("Generating 909 kick with punchy, mid-range presence and quick decay.")
 	case *kickLinnDrum:
-		cfg, err = synth.NewLinnDrum(sampleRate, *length/1000.0, *bitDepth, outFile)
+		cfg, err = synth.NewLinnDrum(sampleRate, *length/1000.0, *bitDepth, nil)
 		fmt.Println("Generating LinnDrum kick with an iconic, punchy sound.")
 	case *kickDeepHouse:
-		cfg, err = synth.NewDeepHouse(sampleRate, *length/1000.0, *bitDepth, outFile)
+		cfg, err = synth.NewDeepHouse(sampleRate, *length/1000.0, *bitDepth, nil)
 		fmt.Println("Generating Deep House kick with smooth, warm bass.")
 	case *kickExperimental:
-		cfg, err = synth.NewExperimental(sampleRate, *length/1000.0, *bitDepth, outFile)
+		cfg, err = synth.NewExperimental(sampleRate, *length/1000.0, *bitDepth, nil)
 		fmt.Println("Generating experimental-style kick with unique texture.")
 	default:
-		cfg, err = synth.NewSettings(150.0, 40.0, sampleRate, *length/1000.0, *bitDepth, outFile)
+		cfg, err = synth.NewSettings(150.0, 40.0, sampleRate, *length/1000.0, *bitDepth, nil)
 		fmt.Println("Generating default kick with user-defined characteristics.")
 	}
 
@@ -126,7 +120,7 @@ func main() {
 	cfg.OscillatorLevels = parseCommaSeparatedFloats(*oscillatorLevels)
 	cfg.SaturatorAmount = *saturatorAmount
 	cfg.FilterBands = parseCommaSeparatedFloats(*filterBands)
-	cfg.FadeDuration = 0.01
+	cfg.FadeDuration = *release // Match fade duration to release time
 	cfg.SmoothFrequencyTransitions = true
 
 	var noise int
@@ -146,14 +140,34 @@ func main() {
 	cfg.NoiseType = noise
 	cfg.NoiseAmount = *noiseAmount
 
-	if err := cfg.GenerateKick(); err != nil {
-		fmt.Println("Failed to generate kick:", err)
+	// Generate the kick drum waveform
+	samples, err := cfg.GenerateKickWaveform()
+	if err != nil {
+		fmt.Println("Failed to generate kick waveform:", err)
+		return
+	}
+
+	// Apply a fade-out at the end to prevent crackling noise
+	samples = synth.ApplyFadeOut(samples, cfg.Release, sampleRate)
+
+	// Open the output file for writing
+	outFile, err := os.Create(*outputFile)
+	if err != nil {
+		fmt.Println("Failed to create output file:", err)
+		return
+	}
+	defer outFile.Close()
+
+	// Save the waveform to the output file
+	if err := synth.SaveToWav(outFile, samples, sampleRate); err != nil {
+		fmt.Println("Failed to save kick to file:", err)
 		return
 	}
 
 	fmt.Println("Kick drum sound generated and written to", *outputFile)
 }
 
+// parseCommaSeparatedFloats parses a comma-separated string of floats
 func parseCommaSeparatedFloats(input string) []float64 {
 	var result []float64
 	for _, s := range strings.Split(input, ",") {
