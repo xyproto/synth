@@ -42,6 +42,7 @@ func main() {
 	saturatorAmount := flag.Float64("saturator", 0.3, "Amount of saturation to apply")
 	filterBands := flag.String("filterbands", "200,1000,3000", "Comma-separated multi-band filter cutoff frequencies")
 	outputFile := flag.String("o", "kick.wav", "Output file path")
+	playKick := flag.Bool("p", false, "Play the generated kick") // Added -p flag
 	showVersion := flag.Bool("version", false, "Show the current version")
 	showHelp := flag.Bool("help", false, "Display this help")
 
@@ -165,6 +166,16 @@ func main() {
 	}
 
 	fmt.Println("Kick drum sound generated and written to", *outputFile)
+
+	// Play the kick if -p flag is provided
+	if *playKick {
+		fmt.Println("Playing the generated kick drum sound...")
+		// Use PlayWaveform to play the samples directly
+		if err := synth.PlayWaveform(samples, sampleRate); err != nil {
+			fmt.Println("Failed to play kick:", err)
+			return
+		}
+	}
 }
 
 // parseCommaSeparatedFloats parses a comma-separated string of floats

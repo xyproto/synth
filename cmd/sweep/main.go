@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"time"
@@ -18,11 +17,13 @@ var (
 	baseFreq    float64
 	showVersion bool
 	showHelp    bool
+	playSound   bool // Added -p flag variable
 )
 
 func init() {
 	flag.BoolVar(&showVersion, "version", false, "Show version information")
 	flag.BoolVar(&showHelp, "help", false, "Show help information")
+	flag.BoolVar(&playSound, "p", false, "Play the generated sound") // Added -p flag
 	flag.IntVar(&sampleRate, "samplerate", 44100, "Sample rate (in Hz)")
 	flag.DurationVar(&duration, "duration", 10*time.Second, "Duration of the audio (e.g., 10s, 5m)")
 	flag.Float64Var(&baseFreq, "freq", 55.0, "Base frequency for the bass sound (in Hz)")
@@ -40,14 +41,6 @@ func main() {
 		flag.Usage()
 		os.Exit(0)
 	}
-
-	// Open the output file for writing as an io.WriteSeeker
-	outFile, err := os.Create("sweep.wav")
-	if err != nil {
-		log.Fatalf("Failed to create output file: %v", err)
-	}
-	defer outFile.Close()
-	var out io.WriteSeeker = outFile
 
 	// Calculate the length of the waveform
 	length := sampleRate * int(duration.Seconds())
@@ -70,11 +63,26 @@ func main() {
 	// Apply a limiter to prevent clipping
 	limited := synth.Limiter(driven)
 
-	// Save the generated sound to a .wav file using the io.WriteSeeker
-	if err := synth.SaveToWav(out, limited, sampleRate); err != nil {
-		fmt.Printf("Error: %v\n", err)
+	// Save the generated sound to a .wav file
+	outFile, err := os.Create("sweep.wav")
+	if err != nil {
+		log.Fatalf("Failed to create output file: %v", err)
+	}
+	defer outFile.Close()
+
+	if err := synth.SaveToWav(outFile, limited, sampleRate); err != nil {
+		fmt.Printf("Error saving WAV file: %v\n", err)
 		return
 	}
 
 	fmt.Println("Successfully generated 'sweep.wav'")
+
+	// Play the sound if -p flag is provided
+	if playSound {
+		fmt.Println("Playing the generated sound...")
+		if err := synth.PlayWaveform(limited, sampleRate); err != nil {
+			fmt.Printf("Error playing sound: %v\n", err)
+			return
+		}
+	}
 }
