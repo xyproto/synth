@@ -593,6 +593,19 @@ func ApplyFrequencyModulation(samples []float64, modFreq, modDepth float64, samp
 	return modulated
 }
 
+// ApplyFadeIn applies a linear fade-in to the start of the samples
+func ApplyFadeIn(samples []float64, fadeDuration float64, sampleRate int) []float64 {
+	fadeSamples := int(fadeDuration * float64(sampleRate))
+	if fadeSamples > len(samples) {
+		fadeSamples = len(samples)
+	}
+	for i := 0; i < fadeSamples; i++ {
+		multiplier := float64(i) / float64(fadeSamples)
+		samples[i] *= multiplier
+	}
+	return samples
+}
+
 // ApplyFadeOut applies a linear fade-out to the end of the samples
 func ApplyFadeOut(samples []float64, fadeDuration float64, sampleRate int) []float64 {
 	totalSamples := len(samples)
@@ -608,4 +621,52 @@ func ApplyFadeOut(samples []float64, fadeDuration float64, sampleRate int) []flo
 		}
 	}
 	return samples
+}
+
+// GenerateSweepWaveform generates a frequency sweep waveform based on the settings.
+func (cfg *Settings) GenerateSweepWaveform() ([]float64, error) {
+	numSamples := int(cfg.Duration * float64(cfg.SampleRate))
+	samples := make([]float64, numSamples)
+
+	for i := 0; i < numSamples; i++ {
+		t := float64(i) / float64(cfg.SampleRate)
+		// Calculate the frequency at time t
+		frequency := cfg.StartFreq * math.Pow(cfg.EndFreq/cfg.StartFreq, t/cfg.Duration)
+		var sample float64
+
+		switch cfg.WaveformType {
+		case WaveSine:
+			sample = math.Sin(2 * math.Pi * frequency * t)
+		case WaveTriangle:
+			sample = 2*math.Abs(2*(t*frequency-math.Floor(t*frequency+0.5))) - 1
+		case WaveSawtooth:
+			sample = 2 * (t*frequency - math.Floor(0.5+t*frequency))
+		case WaveSquare:
+			sample = math.Copysign(1.0, math.Sin(2*math.Pi*frequency*t))
+		default:
+			return nil, fmt.Errorf("unsupported waveform type: %d", cfg.WaveformType)
+		}
+
+		samples[i] = sample
+	}
+
+	return samples, nil
+}
+
+// ApplyChorus applies a chorus effect to the samples
+func ApplyChorus(samples []float64, sampleRate int, delaySec float64, depth float64, rate float64) []float64 {
+	delaySamples := int(delaySec * float64(sampleRate))
+	modulated := make([]float64, len(samples))
+	for i := 0; i < len(samples); i++ {
+		t := float64(i) / float64(sampleRate)
+		modulation := depth * math.Sin(2*math.Pi*rate*t)
+		delay := int(float64(delaySamples) * (1 + modulation))
+		index := i - delay
+		if index >= 0 && index < len(samples) {
+			modulated[i] = (samples[i] + samples[index]) / 2
+		} else {
+			modulated[i] = samples[i]
+		}
+	}
+	return modulated
 }
