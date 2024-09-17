@@ -592,3 +592,20 @@ func ApplyFrequencyModulation(samples []float64, modFreq, modDepth float64, samp
 	}
 	return modulated
 }
+
+// ApplyFadeOut applies a linear fade-out to the end of the samples
+func ApplyFadeOut(samples []float64, fadeDuration float64, sampleRate int) []float64 {
+	totalSamples := len(samples)
+	fadeSamples := int(fadeDuration * float64(sampleRate))
+	if fadeSamples > totalSamples {
+		fadeSamples = totalSamples
+	}
+	for i := 0; i < fadeSamples; i++ {
+		multiplier := 1.0 - float64(i)/float64(fadeSamples)
+		index := totalSamples - fadeSamples + i
+		if index >= 0 && index < totalSamples {
+			samples[index] *= multiplier
+		}
+	}
+	return samples
+}
