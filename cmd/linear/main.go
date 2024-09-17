@@ -11,6 +11,8 @@ import (
 
 const version = "0.0.2"
 
+const bitDepth = 16
+
 func main() {
 	// Define flags
 	outputFile := flag.String("o", "combined.wav", "Specify the output file")
@@ -108,7 +110,7 @@ func main() {
 	defer outFile.Close()
 
 	// Save the final combined result to the output file
-	if err := synth.SaveToWav(outFile, combined, sampleRate); err != nil {
+	if err := synth.SaveToWav(outFile, combined, sampleRate, bitDepth); err != nil {
 		log.Fatalf("Failed to save %s: %v", *outputFile, err)
 	}
 

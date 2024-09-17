@@ -12,7 +12,8 @@ import (
 
 var (
 	version     = "0.0.1"
-	sampleRate  int
+	quality     int
+	bitDepth    int
 	duration    time.Duration
 	baseFreq    float64
 	showVersion bool
@@ -20,16 +21,16 @@ var (
 	playSound   bool // Added -p flag variable
 )
 
-func init() {
+func main() {
+	// Initialize flags in the main function
 	flag.BoolVar(&showVersion, "version", false, "Show version information")
 	flag.BoolVar(&showHelp, "help", false, "Show help information")
 	flag.BoolVar(&playSound, "p", false, "Play the generated sound") // Added -p flag
-	flag.IntVar(&sampleRate, "samplerate", 44100, "Sample rate (in Hz)")
+	flag.IntVar(&quality, "quality", 96, "Sample rate in kHz (44, 48, 96, or 192)")
+	flag.IntVar(&bitDepth, "bitdepth", 16, "Bit depth of the audio (16 or 24)")
 	flag.DurationVar(&duration, "duration", 10*time.Second, "Duration of the audio (e.g., 10s, 5m)")
 	flag.Float64Var(&baseFreq, "freq", 55.0, "Base frequency for the bass sound (in Hz)")
-}
 
-func main() {
 	flag.Parse()
 
 	if showVersion {
@@ -40,6 +41,21 @@ func main() {
 	if showHelp {
 		flag.Usage()
 		os.Exit(0)
+	}
+
+	var sampleRate int
+	switch quality {
+	case 44:
+		sampleRate = 44100
+	case 48:
+		sampleRate = 48000
+	case 96:
+		sampleRate = 96000
+	case 192:
+		sampleRate = 192000
+	default:
+		fmt.Println("Invalid sample rate. Choose 44, 48, 96, or 192 kHz.")
+		os.Exit(1)
 	}
 
 	// Calculate the length of the waveform
@@ -70,7 +86,7 @@ func main() {
 	}
 	defer outFile.Close()
 
-	if err := synth.SaveToWav(outFile, limited, sampleRate); err != nil {
+	if err := synth.SaveToWav(outFile, limited, sampleRate, bitDepth); err != nil {
 		fmt.Printf("Error saving WAV file: %v\n", err)
 		return
 	}

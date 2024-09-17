@@ -160,7 +160,7 @@ func main() {
 	defer outFile.Close()
 
 	// Save the waveform to the output file
-	if err := synth.SaveToWav(outFile, samples, sampleRate); err != nil {
+	if err := synth.SaveToWav(outFile, samples, sampleRate, *bitDepth); err != nil {
 		fmt.Println("Failed to save kick to file:", err)
 		return
 	}
