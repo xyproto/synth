@@ -7,3 +7,8 @@ github.com/go-audio/riff
 # github.com/go-audio/wav v1.1.0
 ## explicit; go 1.13
 github.com/go-audio/wav
+# github.com/veandco/go-sdl2 v0.4.40
+## explicit; go 1.15
+github.com/veandco/go-sdl2/_libs
+github.com/veandco/go-sdl2/mix
+github.com/veandco/go-sdl2/sdl
