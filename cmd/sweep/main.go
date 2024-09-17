@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"time"
 
@@ -39,8 +41,17 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Open the output file for writing as an io.WriteSeeker
+	outFile, err := os.Create("sweep.wav")
+	if err != nil {
+		log.Fatalf("Failed to create output file: %v", err)
+	}
+	defer outFile.Close()
+	var out io.WriteSeeker = outFile
+
 	// Calculate the length of the waveform
 	length := sampleRate * int(duration.Seconds())
+
 	// Detune settings for the oscillators
 	detune := []float64{-0.01, -0.005, 0.0, 0.005, 0.01}
 
@@ -59,8 +70,8 @@ func main() {
 	// Apply a limiter to prevent clipping
 	limited := synth.Limiter(driven)
 
-	// Save the generated sound to a .wav file
-	if err := synth.SaveToWav("sweep.wav", limited, sampleRate); err != nil {
+	// Save the generated sound to a .wav file using the io.WriteSeeker
+	if err := synth.SaveToWav(out, limited, sampleRate); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
