@@ -1,6 +1,7 @@
 package synth
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -81,38 +82,14 @@ func LoadWav(filename string, monoToStereo bool) ([]float64, int, error) {
 	return samples, sampleRate, nil
 }
 
-// PlayWav plays a WAV file using an external command
-func PlayWav(filePath string) error {
+// FFPlayWav plays a WAV file using ffplay
+func FFPlayWav(filePath string) error {
 	cmd := exec.Command("ffplay", "-nodisp", "-autoexit", filePath)
 	err := cmd.Start()
 	if err != nil {
 		return fmt.Errorf("error playing sound with ffplay: %v", err)
 	}
 	return cmd.Wait()
-}
-
-// Play plays the generated kick sound by writing it to a temporary WAV file and playing it with an external player
-func (cfg *Settings) Play() error {
-	// Generate the kick waveform in memory
-	samples, err := cfg.GenerateKickWaveform()
-	if err != nil {
-		return err
-	}
-
-	// Save the waveform to a temporary WAV file
-	tmpFile, err := os.CreateTemp("", "kick_*.wav")
-	if err != nil {
-		return fmt.Errorf("error creating temporary file: %v", err)
-	}
-	defer os.Remove(tmpFile.Name())
-
-	err = SaveToWav(tmpFile, samples, cfg.SampleRate)
-	if err != nil {
-		return err
-	}
-
-	// Play the generated WAV file using an external player
-	return PlayWav(tmpFile.Name())
 }
 
 // SaveKickTo generates a kick samples and saves it to a specified directory, avoiding filename collisions.
@@ -144,4 +121,24 @@ func (cfg *Settings) SaveKickTo(directory string) (string, error) {
 	}
 
 	return fileName, nil
+}
+
+// PlayKick generates and plays the current kick drum sound
+func (cfg *Settings) PlayKick() error {
+	samples, err := cfg.GenerateKickWaveform()
+	if err != nil {
+		return err
+	}
+	return PlayWaveform(samples, cfg.SampleRate)
+}
+
+// PlayWav plays a WAV file
+func PlayWav(filePath string) error {
+	// TODO: TO IMPLEMENT!
+	return errors.New("PlayWav: not implemented!")
+}
+
+func PlayWaveform(samples []float64, sampleRate int) error {
+	// TODO: TO IMPLEMENT!
+	return errors.New("PlayWaveform: not implemented!")
 }
