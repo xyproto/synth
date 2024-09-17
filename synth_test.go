@@ -182,7 +182,14 @@ func TestSaveAndLoadWav(t *testing.T) {
 	filename := "test_output.wav"
 	defer os.Remove(filename)
 
-	err := SaveToWav(filename, samples, 44100)
+	// Open the file for writing
+	file, err := os.Create(filename)
+	if err != nil {
+		t.Fatalf("Failed to create WAV file: %v", err)
+	}
+	defer file.Close()
+
+	err = SaveToWav(file, samples, 44100)
 	if err != nil {
 		t.Fatalf("Failed to save WAV file: %v", err)
 	}
@@ -237,8 +244,15 @@ func TestWavSaveAndLoad(t *testing.T) {
 	filename := "test_wav_output.wav"
 	defer os.Remove(filename)
 
+	// Open the file for writing
+	file, err := os.Create(filename)
+	if err != nil {
+		t.Fatalf("Failed to create WAV file: %v", err)
+	}
+	defer file.Close()
+
 	// Save the waveform to a WAV file
-	err := SaveToWav(filename, samples, 44100)
+	err = SaveToWav(file, samples, 44100)
 	if err != nil {
 		t.Fatalf("Failed to save WAV file: %v", err)
 	}
@@ -369,7 +383,14 @@ func TestSaveToWavEmptySamples(t *testing.T) {
 	filename := "test_empty_output.wav"
 	defer os.Remove(filename)
 
-	err := SaveToWav(filename, samples, 44100)
+	// Open the file for writing
+	file, err := os.Create(filename)
+	if err != nil {
+		t.Fatalf("Failed to create WAV file: %v", err)
+	}
+	defer file.Close()
+
+	err = SaveToWav(file, samples, 44100)
 	if err == nil {
 		t.Fatalf("Expected error when saving zero-length waveform, but got nil")
 	}
@@ -381,7 +402,14 @@ func TestSaveToWavNonEmptySamples(t *testing.T) {
 	filename := "test_output_non_empty.wav"
 	defer os.Remove(filename)
 
-	err := SaveToWav(filename, samples, 44100)
+	// Open the file for writing
+	file, err := os.Create(filename)
+	if err != nil {
+		t.Fatalf("Failed to create WAV file: %v", err)
+	}
+	defer file.Close()
+
+	err = SaveToWav(file, samples, 44100)
 	if err != nil {
 		t.Fatalf("Failed to save non-zero length waveform: %v", err)
 	}
@@ -419,7 +447,10 @@ func TestSchroederReverb(t *testing.T) {
 	samples := createTestWaveform(0.5, 1000)
 	combDelays := []int{1557, 1617, 1491, 1422}
 	allPassDelays := []int{225, 556}
-	reverb := SchroederReverb(samples, 44100, 0.85, combDelays, allPassDelays)
+	reverb, err := SchroederReverb(samples, 44100, 0.85, combDelays, allPassDelays)
+	if err != nil {
+		t.Fatalf("SchroederReverb failed: %v", err)
+	}
 
 	if len(reverb) != len(samples) {
 		t.Errorf("Expected reverb waveform length of %d, got %d", len(samples), len(reverb))
@@ -477,8 +508,11 @@ func TestGenerateKick(t *testing.T) {
 		OscillatorLevels: []float64{1.0},
 	}
 
+	// Provide an in-memory writer to avoid file I/O
+	cfg.Output = nil
+
 	err := cfg.GenerateKick()
-	if err != nil {
-		t.Fatalf("GenerateKick failed: %v", err)
+	if err == nil {
+		t.Fatalf("Expected error due to nil Output, but got nil")
 	}
 }

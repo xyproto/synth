@@ -2,6 +2,7 @@ package synth
 
 import (
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"os/exec"
@@ -12,19 +13,13 @@ import (
 )
 
 // SaveToWav saves the waveform to a .wav file using int16 PCM format.
-func SaveToWav(filename string, samples []float64, sampleRate int) error {
+func SaveToWav(w io.WriteSeeker, samples []float64, sampleRate int) error {
 	if len(samples) == 0 {
 		return fmt.Errorf("cannot save empty waveform: no samples provided")
 	}
 
-	outFile, err := os.Create(filename)
-	if err != nil {
-		return fmt.Errorf("error creating wav file: %v", err)
-	}
-	defer outFile.Close()
-
 	// Create a new WAV encoder for int16 PCM
-	enc := wav.NewEncoder(outFile, sampleRate, 16, 1, 1) // 16-bit, mono channel
+	enc := wav.NewEncoder(w, sampleRate, 16, 1, 1) // 16-bit, mono channel
 
 	// Create an IntBuffer to store the int16 PCM data
 	buf := &audio.IntBuffer{
@@ -86,20 +81,14 @@ func LoadWav(filename string, monoToStereo bool) ([]float64, int, error) {
 	return samples, sampleRate, nil
 }
 
-// PlayWav plays a WAV file using mpv or ffmpeg
+// PlayWav plays a WAV file using an external command
 func PlayWav(filePath string) error {
-	cmd := exec.Command("mpv", filePath)
+	cmd := exec.Command("ffplay", "-nodisp", "-autoexit", filePath)
 	err := cmd.Start()
 	if err != nil {
-		// Fallback to ffmpeg if mpv is not available
-		cmd = exec.Command("ffmpeg", "-i", filePath, "-f", "null", "-")
-		err = cmd.Start()
-		if err != nil {
-			return fmt.Errorf("error playing sound with both mpv and ffmpeg: %v", err)
-		}
+		return fmt.Errorf("error playing sound with ffplay: %v", err)
 	}
-	cmd.Wait()
-	return nil
+	return cmd.Wait()
 }
 
 // Play plays the generated kick sound by writing it to a temporary WAV file and playing it with an external player
@@ -117,12 +106,12 @@ func (cfg *Settings) Play() error {
 	}
 	defer os.Remove(tmpFile.Name())
 
-	err = SaveToWav(tmpFile.Name(), samples, cfg.SampleRate)
+	err = SaveToWav(tmpFile, samples, cfg.SampleRate)
 	if err != nil {
 		return err
 	}
 
-	// Play the generated WAV file using an external player (mpv or ffmpeg)
+	// Play the generated WAV file using an external player
 	return PlayWav(tmpFile.Name())
 }
 
