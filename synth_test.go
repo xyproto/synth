@@ -305,7 +305,7 @@ func TestSaveTo(t *testing.T) {
 	}
 
 	// Test saving the generated waveform to a .wav file
-	filename, err := cfg.SaveTo(".")
+	filename, err := cfg.SaveKickTo(".")
 	defer os.Remove(filename) // Cleanup after test
 
 	if err != nil {
