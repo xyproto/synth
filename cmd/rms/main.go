@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/xyproto/synth"
 )
@@ -46,12 +47,11 @@ func main() {
 		log.Fatalf("Failed to load %s: %v", firstFile, err)
 	}
 
-	// Find the highest frequency across all files (initialize to 0) and track the loudest sample
-	highestFrequency := 0.0
+	// Initialize loudest peak
 	loudestPeak := synth.FindPeakAmplitude(combined)
 
-	// Process additional files and mix them using RMSMixing
-	for _, inputFile := range inputFiles {
+	// Process additional files and mix them using LinearSummation
+	for _, inputFile := range inputFiles[1:] { // Start from the second file
 		// Load the next file
 		wave, sr, err := synth.LoadWav(inputFile, true)
 		if err != nil {
@@ -63,12 +63,6 @@ func main() {
 			log.Fatalf("Sample rate mismatch between %s and %s", firstFile, inputFile)
 		}
 
-		// Determine the highest frequency in the current file
-		currentHighestFrequency := synth.AnalyzeHighestFrequency(wave, sr)
-		if currentHighestFrequency > highestFrequency {
-			highestFrequency = currentHighestFrequency
-		}
-
 		// Find the peak amplitude in the current file and track the loudest peak
 		peak := synth.FindPeakAmplitude(wave)
 		if peak > loudestPeak {
@@ -78,23 +72,30 @@ func main() {
 		// Pad the shorter sample with zeros
 		combined, wave = synth.PadSamples(combined, wave)
 
-		// Mix the current combined samples with the newly loaded samples using RMSMixing
-		combined, err = synth.RMSMixing(combined, wave)
+		// Mix the current combined samples with the newly loaded samples using LinearSummation
+		combined, err = synth.LinearSummation(combined, wave)
 		if err != nil {
-			log.Fatalf("Error during RMS mixing of %s: %v", inputFile, err)
+			log.Fatalf("Error during linear summation mixing of %s: %v", inputFile, err)
 		}
 	}
-
-	// Apply low-pass filter using the highest detected frequency
-	fmt.Printf("Applying low-pass filter with cutoff frequency: %.2f Hz\n", highestFrequency)
-	combined = synth.LowPassFilter(combined, highestFrequency, sampleRate)
 
 	// Normalize the final combined samples to the loudest input sample's peak
 	fmt.Printf("Normalizing loudness to the loudest peak: %f\n", loudestPeak)
 	combined = synth.NormalizeSamples(combined, loudestPeak)
 
-	// Save the final combined result to the output file
-	if err := synth.SaveToWav(*outputFile, combined, sampleRate); err != nil {
+	// Apply a quick fade-out to the end of the combined samples
+	fadeDuration := 0.01 // Fade-out duration in seconds (10 milliseconds)
+	combined = synth.ApplyFadeOut(combined, fadeDuration, sampleRate)
+
+	// Open the output file for writing
+	outFile, err := os.Create(*outputFile)
+	if err != nil {
+		log.Fatalf("Failed to create output file %s: %v", *outputFile, err)
+	}
+	defer outFile.Close()
+
+	// Save the final combined result to the output file using an io.WriteSeeker
+	if err := synth.SaveToWav(outFile, combined, sampleRate); err != nil {
 		log.Fatalf("Failed to save %s: %v", *outputFile, err)
 	}
 
