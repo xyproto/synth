@@ -148,7 +148,7 @@ func main() {
 	}
 
 	// Apply a fade-out at the end to prevent crackling noise
-	samples = synth.ApplyFadeOut(samples, cfg.Release, sampleRate)
+	samples = synth.ApplyFadeOut(samples, cfg.Release, sampleRate, synth.QuadraticFade)
 
 	// Open the output file for writing
 	outFile, err := os.Create(*outputFile)

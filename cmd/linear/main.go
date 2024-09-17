@@ -97,7 +97,7 @@ func main() {
 	// Apply a quick fade-out to the end of the combined samples
 	if *fadeDuration > 0 {
 		fmt.Printf("Applying fade-out of %.2f seconds\n", *fadeDuration)
-		combined = synth.ApplyFadeOut(combined, *fadeDuration, sampleRate)
+		combined = synth.ApplyFadeOut(combined, *fadeDuration, sampleRate, synth.QuadraticFade)
 	}
 
 	// Open the output file for writing
