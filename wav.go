@@ -115,8 +115,8 @@ func (cfg *Settings) Play() error {
 	return PlayWav(tmpFile.Name())
 }
 
-// SaveTo saves the generated kick to a specified directory, avoiding filename collisions.
-func (cfg *Settings) SaveTo(directory string) (string, error) {
+// SaveKickTo generates a kick samples and saves it to a specified directory, avoiding filename collisions.
+func (cfg *Settings) SaveKickTo(directory string) (string, error) {
 	n := 1
 	var fileName string
 	for {
