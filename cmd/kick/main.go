@@ -10,9 +10,10 @@ import (
 	"github.com/xyproto/synth"
 )
 
-const version = "0.0.1"
+const version = "0.0.2"
 
 func main() {
+	// Drum style flags
 	kick606 := flag.Bool("606", false, "Generate a kick.wav like a 606 kick drum")
 	kick707 := flag.Bool("707", false, "Generate a kick.wav like a 707 kick drum")
 	kick808 := flag.Bool("808", false, "Generate a kick.wav like an 808 kick drum")
@@ -20,6 +21,8 @@ func main() {
 	kickLinnDrum := flag.Bool("linn", false, "Generate a kick.wav like a LinnDrum kick drum")
 	kickDeepHouse := flag.Bool("deephouse", false, "Generate a deep house kick drum")
 	kickExperimental := flag.Bool("experimental", false, "Generate a kick.wav with experimental-style characteristics")
+
+	// Sound customization flags
 	noiseType := flag.String("noise", "none", "Type of noise to mix in (none, white, pink, brown)")
 	noiseAmount := flag.Float64("noiseamount", 0.0, "Amount of noise to mix in (0.0 to 1.0)")
 	length := flag.Float64("length", 1000, "Length of the kick drum sample in milliseconds")
@@ -109,6 +112,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Apply user-defined settings
 	cfg.WaveformType = *waveform
 	cfg.Attack = *attack
 	cfg.Decay = *decay
@@ -126,7 +130,7 @@ func main() {
 	cfg.SmoothFrequencyTransitions = true
 
 	var noise int
-	switch *noiseType {
+	switch strings.ToLower(*noiseType) {
 	case "white":
 		noise = synth.NoiseWhite
 	case "pink":
