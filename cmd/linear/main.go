@@ -4,15 +4,18 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/xyproto/synth"
 )
 
-const version = "0.0.1"
+const version = "0.0.2"
 
 func main() {
 	// Define flags
 	outputFile := flag.String("o", "combined.wav", "Specify the output file")
+	lowPassCutoff := flag.Float64("lowpass", 15000, "Low-pass filter cutoff frequency in Hz (0 to disable)")
+	fadeDuration := flag.Float64("fadeout", 0.01, "Fade-out duration in seconds")
 	showVersion := flag.Bool("version", false, "Show the version and exit")
 	showHelp := flag.Bool("help", false, "Show help")
 
@@ -21,7 +24,7 @@ func main() {
 
 	// Show version and exit if --version is passed
 	if *showVersion {
-		fmt.Printf("rms version %s\n", version)
+		fmt.Printf("mix version %s\n", version)
 		return
 	}
 
@@ -33,7 +36,7 @@ func main() {
 
 	// Expect at least two input files
 	if flag.NArg() < 2 {
-		fmt.Println("Usage: rms [options] <input1.wav> <input2.wav> [additional input files...]")
+		fmt.Println("Usage: mix [options] <input1.wav> <input2.wav> [additional input files...]")
 		flag.Usage()
 		return
 	}
@@ -77,9 +80,11 @@ func main() {
 		}
 	}
 
-	// Apply low-pass filter using a reasonable cutoff frequency (e.g., 15kHz to remove high-frequency noise)
-	fmt.Println("Applying low-pass filter to combined audio.")
-	combined = synth.LowPassFilter(combined, 15000, sampleRate) // Cut off frequencies above 15kHz
+	// Apply low-pass filter if cutoff frequency is greater than 0
+	if *lowPassCutoff > 0 {
+		fmt.Printf("Applying low-pass filter with cutoff frequency: %.2f Hz\n", *lowPassCutoff)
+		combined = synth.LowPassFilter(combined, *lowPassCutoff, sampleRate)
+	}
 
 	// Normalize the final combined samples based on the loudest peak value
 	if loudestPeak != 0 {
@@ -89,8 +94,21 @@ func main() {
 		fmt.Println("Warning: Loudest peak is 0, skipping normalization.")
 	}
 
+	// Apply a quick fade-out to the end of the combined samples
+	if *fadeDuration > 0 {
+		fmt.Printf("Applying fade-out of %.2f seconds\n", *fadeDuration)
+		combined = synth.ApplyFadeOut(combined, *fadeDuration, sampleRate)
+	}
+
+	// Open the output file for writing
+	outFile, err := os.Create(*outputFile)
+	if err != nil {
+		log.Fatalf("Failed to create output file %s: %v", *outputFile, err)
+	}
+	defer outFile.Close()
+
 	// Save the final combined result to the output file
-	if err := synth.SaveToWav(*outputFile, combined, sampleRate); err != nil {
+	if err := synth.SaveToWav(outFile, combined, sampleRate); err != nil {
 		log.Fatalf("Failed to save %s: %v", *outputFile, err)
 	}
 
