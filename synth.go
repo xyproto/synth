@@ -155,61 +155,6 @@ func Limiter(samples []float64) []float64 {
 	return limited
 }
 
-// OldGenerateKick generates the kick drum sound based on the settings
-func (cfg *Settings) OldGenerateKick() error {
-	numSamples := int(float64(cfg.SampleRate) * cfg.Duration)
-	samples := make([]float64, numSamples)
-
-	// Generate waveform based on the WaveformType
-	for i := 0; i < numSamples; i++ {
-		t := float64(i) / float64(cfg.SampleRate)
-		frequency := cfg.StartFreq * math.Pow(cfg.EndFreq/cfg.StartFreq, t/cfg.Duration)
-		var sample float64
-
-		switch cfg.WaveformType {
-		case WaveSine:
-			sample = math.Sin(2 * math.Pi * frequency * t)
-		case WaveTriangle:
-			sample = 2*math.Abs(2*(t*frequency-math.Floor(t*frequency+0.5))) - 1
-		case WaveSawtooth:
-			sample = 2 * (t*frequency - math.Floor(0.5+t*frequency))
-		case WaveSquare:
-			sample = math.Copysign(1.0, math.Sin(2*math.Pi*frequency*t))
-		case WaveWhiteNoise:
-			sample = (rand.Float64()*2 - 1) * cfg.NoiseAmount
-		case WavePinkNoise:
-			sample = GenerateNoise(NoisePink, 1, cfg.NoiseAmount)[0]
-		case WaveBrownNoise:
-			sample = GenerateNoise(NoiseBrown, 1, cfg.NoiseAmount)[0]
-		default:
-			return fmt.Errorf("unsupported waveform type: %d", cfg.WaveformType)
-		}
-
-		if len(cfg.OscillatorLevels) > 0 {
-			sample *= cfg.OscillatorLevels[0] // Apply the first oscillator level
-		}
-
-		// Apply envelope (ADSR)
-		sample *= cfg.ApplyEnvelopeAtTime(t)
-
-		// Apply drive (distortion)
-		sample = cfg.ApplyDrive(sample)
-
-		samples[i] = sample
-	}
-
-	// Apply limiter to the samples
-	samples = Limiter(samples)
-
-	// Write to output
-	if cfg.Output != nil {
-		return SaveToWav(cfg.Output, samples, cfg.SampleRate, cfg.BitDepth)
-	}
-
-	// If no output is specified, return an error
-	return errors.New("no output specified for OldGenerateKick")
-}
-
 // GenerateClap generates a clap sound by combining filtered noise bursts
 func (cfg *Settings) GenerateClap() ([]float64, error) {
 	// Clap consists of multiple bursts of filtered noise
@@ -367,7 +312,6 @@ func (cfg *Settings) GenerateOpenHH() ([]float64, error) {
 // GenerateRimshot generates a rimshot sound by using a short burst of high-frequency noise
 func (cfg *Settings) GenerateRimshot() ([]float64, error) {
 	numSamples := int(float64(cfg.SampleRate) * cfg.Duration)
-	samples := make([]float64, numSamples)
 
 	// Generate a sharp, metallic noise burst for the rimshot
 	noiseSamples := GenerateNoise(cfg.NoiseType, numSamples, cfg.NoiseAmount)
@@ -376,7 +320,7 @@ func (cfg *Settings) GenerateRimshot() ([]float64, error) {
 	noiseSamples = BandPassFilter(noiseSamples, 2000.0, 6000.0, cfg.SampleRate)
 
 	// Apply a short ADSR envelope to make it a quick, percussive sound
-	samples = ApplyEnvelope(noiseSamples, cfg.Attack, cfg.Decay, cfg.Sustain, cfg.Release, cfg.SampleRate)
+	samples := ApplyEnvelope(noiseSamples, cfg.Attack, cfg.Decay, cfg.Sustain, cfg.Release, cfg.SampleRate)
 
 	// Add drive (distortion) for punch
 	samples = Drive(samples, cfg.Drive)
@@ -456,7 +400,6 @@ func (cfg *Settings) GeneratePercussion() ([]float64, error) {
 // GenerateRide generates a ride cymbal sound using filtered noise
 func (cfg *Settings) GenerateRide() ([]float64, error) {
 	numSamples := int(float64(cfg.SampleRate) * cfg.Duration)
-	samples := make([]float64, numSamples)
 
 	// Generate metallic noise for the ride cymbal
 	noiseSamples := GenerateNoise(cfg.NoiseType, numSamples, cfg.NoiseAmount)
@@ -465,7 +408,7 @@ func (cfg *Settings) GenerateRide() ([]float64, error) {
 	noiseSamples = HighPassFilter(noiseSamples, 5000.0, cfg.SampleRate)
 
 	// Apply a longer ADSR envelope to simulate the ringing sound of a ride cymbal
-	samples = ApplyEnvelope(noiseSamples, cfg.Attack, cfg.Decay, cfg.Sustain, cfg.Release, cfg.SampleRate)
+	samples := ApplyEnvelope(noiseSamples, cfg.Attack, cfg.Decay, cfg.Sustain, cfg.Release, cfg.SampleRate)
 
 	// Apply drive (distortion) for added metallic resonance
 	samples = Drive(samples, cfg.Drive)
@@ -479,7 +422,6 @@ func (cfg *Settings) GenerateRide() ([]float64, error) {
 // GenerateCrash generates a crash cymbal sound using filtered noise
 func (cfg *Settings) GenerateCrash() ([]float64, error) {
 	numSamples := int(float64(cfg.SampleRate) * cfg.Duration)
-	samples := make([]float64, numSamples)
 
 	// Generate wide-spectrum noise for the crash cymbal
 	noiseSamples := GenerateNoise(cfg.NoiseType, numSamples, cfg.NoiseAmount)
@@ -488,7 +430,7 @@ func (cfg *Settings) GenerateCrash() ([]float64, error) {
 	noiseSamples = BandPassFilter(noiseSamples, 2000.0, 15000.0, cfg.SampleRate)
 
 	// Apply a quick attack and a longer decay ADSR envelope
-	samples = ApplyEnvelope(noiseSamples, cfg.Attack, cfg.Decay, cfg.Sustain, cfg.Release, cfg.SampleRate)
+	samples := ApplyEnvelope(noiseSamples, cfg.Attack, cfg.Decay, cfg.Sustain, cfg.Release, cfg.SampleRate)
 
 	// Add drive to enhance the "explosive" nature of the crash
 	samples = Drive(samples, cfg.Drive)
@@ -539,7 +481,7 @@ func (cfg *Settings) GenerateXylophone() ([]float64, error) {
 	samples = ApplyEnvelope(samples, cfg.Attack, cfg.Decay, cfg.Sustain, cfg.Release, cfg.SampleRate)
 
 	// Optionally, apply a bit of reverb for depth
-	samples, _ = SchroederReverb(samples, cfg.SampleRate, 0.3, []int{1557, 1617, 1491, 1422}, []int{225, 556})
+	samples, _ = SchroederReverb(samples, 0.3, []int{1557, 1617, 1491, 1422}, []int{225, 556})
 
 	// Apply limiter to keep everything within the [-1, 1] range
 	samples = Limiter(samples)
@@ -859,7 +801,7 @@ func BandPassFilter(samples []float64, lowCutoff, highCutoff float64, sampleRate
 }
 
 // SchroederReverb applies a high-quality reverb effect using the Schroeder algorithm
-func SchroederReverb(samples []float64, sampleRate int, decayFactor float64, combDelays []int, allPassDelays []int) ([]float64, error) {
+func SchroederReverb(samples []float64, decayFactor float64, combDelays []int, allPassDelays []int) ([]float64, error) {
 	if len(combDelays) != 4 || len(allPassDelays) != 2 {
 		return nil, errors.New("SchroederReverb expects 4 comb delays and 2 all-pass delays")
 	}
