@@ -2,13 +2,18 @@
 
 Generate audio samples.
 
-Used to create this CC0 licensed kick drum sample pack:
+* This package is a bit experimental and a work in progress.
+* Includes a `kick` utility for generating kick drum samples, plus `rms` and `linear` for mixing audio and `sweep` for making a detuned synth sample. They are all in the `cmd` directory.
+* Used by the [Kickpad](https://github.com/xyproto/kickpad) application.
+* `ffplay` is needed for playing samples with this package, unless it is built with the `sdl2` go build tag (`go build -tags sdl2`).
+
+## Free sample pack
+
+`synth` was used to create this CC0 licensed kick drum sample pack which can be downloaded here:
 
 * https://github.com/xyproto/synth/releases/download/v1.4.4/afr-kicks-2024.zip
 
-This project is a bit experimental and a work in progress.
-
-ffplay is needed for playing samples, unless the project is built with the sdl2 go build tag.
+## General info
 
 * License: MIT
 * Verison: 1.5.2
