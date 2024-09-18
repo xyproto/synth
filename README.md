@@ -9,7 +9,7 @@ Generate audio samples.
 
 ## Free sample pack
 
-`synth` was used to create this CC0 licensed kick drum sample pack which can be downloaded here:
+`synth` was used to create this CC0 licensed kick drum sample pack which can be downloaded here (note that the `.wav` filenames are not as meaningful as I originally indended them to be).
 
 * https://github.com/xyproto/synth/releases/download/v1.4.4/afr-kicks-2024.zip
 
