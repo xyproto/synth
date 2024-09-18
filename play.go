@@ -54,7 +54,7 @@ func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth int) 
 	if err := SaveToWav(tmpFile, samples, sampleRate, bitDepth); err != nil {
 		return fmt.Errorf("error saving wav file: %v", err)
 	}
-	err = FFPlayWav(tmpFile.Name())
+	err = FFPlayWavWithSampleRate(tmpFile.Name(), sampleRate)
 	if err != nil {
 		return fmt.Errorf("error playing wav file: %v", err)
 	}
