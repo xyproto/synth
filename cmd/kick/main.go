@@ -27,7 +27,7 @@ func main() {
 	noiseAmount := flag.Float64("noiseamount", 0.0, "Amount of noise to mix in (0.0 to 1.0)")
 	length := flag.Float64("length", 1000, "Length of the kick drum sample in milliseconds")
 	quality := flag.Int("quality", 96, "Sample rate in kHz (44, 48, 96, or 192)")
-	bitDepth := flag.Int("bitdepth", 16, "Bit depth of the audio (16 or 24)")
+	bitDepth := flag.Int("bitdepth", 16, "Bit depth of the audio (8, 16, 24 or 32)")
 	waveform := flag.Int("waveform", synth.WaveSine, "Waveform type (0: Sine, 1: Triangle, 2: Sawtooth, 3: Square)")
 	attack := flag.Float64("attack", 0.003, "Attack time in seconds")
 	decay := flag.Float64("decay", 0.3, "Decay time in seconds")
