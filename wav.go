@@ -97,33 +97,30 @@ func LoadWav(filename string, monoToStereo bool) ([]float64, int, error) {
 	return samples, sampleRate, nil
 }
 
-// SaveKickTo generates kick samples and saves it to a specified directory, avoiding filename collisions.
-func (cfg *Settings) SaveKickTo(directory string) (string, error) {
+// GenerateAndSaveTo generates samples for a given type (e.g., "kick", "snare") and saves it to a specified directory, avoiding filename collisions.
+func (cfg *Settings) GenerateAndSaveTo(t, directory string) (string, error) {
 	n := 1
 	var fileName string
 	for {
-		// Construct the file path with an incrementing number
-		fileName = filepath.Join(directory, fmt.Sprintf("kick%d.wav", n))
+		// Construct the file path with an incrementing number based on the type
+		fileName = filepath.Join(directory, fmt.Sprintf("%s%d.wav", t, n))
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
 			break
 		}
 		n++
 	}
-
 	// Create the new file
 	file, err := os.Create(fileName)
 	if err != nil {
 		return "", err
 	}
 	defer file.Close()
-
-	// Set the file as the output for the kick generation
+	// Set the file as the output for the sound generation
 	cfg.Output = file
-
-	// Generate the kick and write to the file
-	if err := cfg.GenerateKick(); err != nil {
+	// Call the appropriate Generate function based on the type
+	_, err = cfg.Generate(t)
+	if err != nil {
 		return "", err
 	}
-
 	return fileName, nil
 }

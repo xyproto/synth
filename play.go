@@ -27,10 +27,15 @@ func (player *Player) Close() {
 
 // PlayKick generates and plays the current kick drum sound
 func (player *Player) PlayKick(cfg *Settings) error {
+	return player.GeneratePlay("kick", cfg)
+}
+
+// GeneratePlay generates a waveform of the given type and then plays it
+func (player *Player) GeneratePlay(t string, cfg *Settings) error {
 	if !player.Initialized {
 		return errors.New("ffplay culd not be found")
 	}
-	return FFPlayKick(cfg)
+	return FFGeneratePlay(t, cfg)
 }
 
 // PlayWav plays a WAV file using SDL2 and SDL_mixer

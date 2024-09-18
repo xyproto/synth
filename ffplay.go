@@ -16,11 +16,11 @@ func FFPlayWav(filePath string) error {
 	return cmd.Wait()
 }
 
-// FFPlayKick generates a Kick drum waveform, saves it to a temporary WAV file,
+// FFGeneratePlay generates a waveform of the given type, saves it to a temporary WAV file,
 // plays it using ffplay, and then deletes the temporary file.
-func FFPlayKick(cfg *Settings) error {
+func FFGeneratePlay(t string, cfg *Settings) error {
 	// Generate the kick drum waveform
-	samples, err := cfg.GenerateKickWaveform()
+	samples, err := cfg.Generate(t)
 	if err != nil {
 		return fmt.Errorf("error generating kick waveform: %v", err)
 	}
@@ -39,6 +39,5 @@ func FFPlayKick(cfg *Settings) error {
 	if err != nil {
 		return fmt.Errorf("error playing wav file: %v", err)
 	}
-
 	return nil
 }

@@ -306,7 +306,7 @@ func TestSaveTo(t *testing.T) {
 	}
 
 	// Test saving the generated waveform to a .wav file
-	filename, err := cfg.SaveKickTo(".")
+	filename, err := cfg.GenerateAndSaveTo("kick", ".")
 	defer os.Remove(filename) // Cleanup after test
 
 	if err != nil {
@@ -319,8 +319,8 @@ func TestSaveTo(t *testing.T) {
 	}
 }
 
-// TestGenerateKickWaveform checks if GenerateKickWaveform correctly generates non-zero length samples
-func TestGenerateKickWaveform(t *testing.T) {
+// TestGenerateKick checks if GenerateKickWaveform correctly generates non-zero length samples
+func TestGenerateKick(t *testing.T) {
 	cfg := &Settings{
 		StartFreq:        100.0,
 		EndFreq:          50.0,
@@ -330,9 +330,9 @@ func TestGenerateKickWaveform(t *testing.T) {
 		OscillatorLevels: []float64{1.0},
 	}
 
-	samples, err := cfg.GenerateKickWaveform()
+	samples, err := cfg.GenerateKick()
 	if err != nil {
-		t.Fatalf("GenerateKickWaveform failed: %v", err)
+		t.Fatalf("GenerateKick failed: %v", err)
 	}
 
 	if len(samples) == 0 {
@@ -442,7 +442,7 @@ func TestApplyFrequencyModulation(t *testing.T) {
 	}
 }
 
-func TestGenerateKick(t *testing.T) {
+func TestOldGenerateKick(t *testing.T) {
 	cfg := &Settings{
 		StartFreq:        100.0,
 		EndFreq:          50.0,
@@ -459,7 +459,7 @@ func TestGenerateKick(t *testing.T) {
 	// Provide an in-memory writer to avoid file I/O
 	cfg.Output = nil
 
-	err := cfg.GenerateKick()
+	err := cfg.OldGenerateKick()
 	if err == nil {
 		t.Fatalf("Expected error due to nil Output, but got nil")
 	}

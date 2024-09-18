@@ -142,9 +142,9 @@ func main() {
 	cfg.NoiseAmount = *noiseAmount
 
 	// Generate the kick drum waveform
-	samples, err := cfg.GenerateKickWaveform()
+	samples, err := cfg.GenerateKick()
 	if err != nil {
-		fmt.Println("Failed to generate kick waveform:", err)
+		fmt.Println("Failed to generate kick:", err)
 		return
 	}
 
