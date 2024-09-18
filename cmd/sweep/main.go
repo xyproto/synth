@@ -96,9 +96,9 @@ func main() {
 	// Play the sound if -p flag is provided
 	if playSound {
 		fmt.Println("Playing the generated sound...")
-		sdl2 := synth.NewSDL2()
-		defer sdl2.Close()
-		if err := sdl2.PlayWaveform(limited, sampleRate); err != nil {
+		player := synth.NewPlayer()
+		defer player.Close()
+		if err := player.PlayWaveform(limited, sampleRate, bitDepth); err != nil {
 			fmt.Printf("Error playing sound: %v\n", err)
 			return
 		}

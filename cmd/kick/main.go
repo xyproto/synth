@@ -171,9 +171,9 @@ func main() {
 	if *playKick {
 		fmt.Println("Playing the generated kick drum sound...")
 		// Use PlayWaveform to play the samples directly
-		sdl2 := synth.NewSDL2()
-		defer sdl2.Close()
-		if err := sdl2.PlayWaveform(samples, sampleRate); err != nil {
+		player := synth.NewPlayer()
+		defer player.Close()
+		if err := player.PlayWaveform(samples, sampleRate, *bitDepth); err != nil {
 			fmt.Println("Failed to play kick:", err)
 			return
 		}
