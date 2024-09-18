@@ -442,29 +442,6 @@ func TestApplyFrequencyModulation(t *testing.T) {
 	}
 }
 
-func TestOldGenerateKick(t *testing.T) {
-	cfg := &Settings{
-		StartFreq:        100.0,
-		EndFreq:          50.0,
-		SampleRate:       44100,
-		BitDepth:         16,
-		Duration:         1.0,
-		Attack:           0.1,
-		Decay:            0.3,
-		Sustain:          0.5,
-		Release:          0.4,
-		OscillatorLevels: []float64{1.0},
-	}
-
-	// Provide an in-memory writer to avoid file I/O
-	cfg.Output = nil
-
-	err := cfg.OldGenerateKick()
-	if err == nil {
-		t.Fatalf("Expected error due to nil Output, but got nil")
-	}
-}
-
 func TestHighPassFilter(t *testing.T) {
 	samples := createTestWaveform(1.0, 100)
 	filtered := HighPassFilter(samples, 1000.0, 44100)
@@ -483,7 +460,7 @@ func TestSchroederReverb(t *testing.T) {
 	samples := createTestWaveform(0.5, 1000)
 	combDelays := []int{1557, 1617, 1491, 1422}
 	allPassDelays := []int{225, 556}
-	reverb, err := SchroederReverb(samples, 44100, 0.85, combDelays, allPassDelays)
+	reverb, err := SchroederReverb(samples, 0.85, combDelays, allPassDelays)
 	if err != nil {
 		t.Fatalf("SchroederReverb failed: %v", err)
 	}
@@ -557,14 +534,14 @@ func TestCopySettings(t *testing.T) {
 		OscillatorLevels: []float64{1.0, 0.8},
 	}
 
-	copy := CopySettings(original)
-	if original == copy {
+	copy2 := CopySettings(original)
+	if original == copy2 {
 		t.Error("CopySettings did not create a new instance")
 	}
 
 	// Modify the original and check if the copy remains unchanged
 	original.OscillatorLevels[0] = 0.5
-	if copy.OscillatorLevels[0] != 1.0 {
+	if copy2.OscillatorLevels[0] != 1.0 {
 		t.Error("CopySettings did not perform a deep copy of OscillatorLevels")
 	}
 }
@@ -594,7 +571,7 @@ func TestApplyPanningExtremes(t *testing.T) {
 	tolerance := 1e-6
 
 	// Full left
-	left, right := ApplyPanning(samples, -1.0)
+	_, right := ApplyPanning(samples, -1.0)
 	for i := range samples {
 		if math.Abs(right[i]) > tolerance {
 			t.Errorf("Expected right channel to be silent at full left pan, got %f at index %d", right[i], i)
@@ -602,7 +579,7 @@ func TestApplyPanningExtremes(t *testing.T) {
 	}
 
 	// Full right
-	left, right = ApplyPanning(samples, 1.0)
+	left, _ := ApplyPanning(samples, 1.0)
 	for i := range samples {
 		if math.Abs(left[i]) > tolerance {
 			t.Errorf("Expected left channel to be silent at full right pan, got %f at index %d", left[i], i)
