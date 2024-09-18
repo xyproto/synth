@@ -9,4 +9,4 @@ Used to create this CC0 licensed kick drum sample pack:
 This project is a bit experimental and a work in progress.
 
 * License: MIT
-* Verison: 1.4.4
+* Verison: 1.5.0
