@@ -43,7 +43,7 @@ func (player *Player) GeneratePlay(t string, cfg *Settings) error {
 	if err != nil {
 		return err
 	}
-	return player.PlayWaveform(samples, cfg.SampleRate)
+	return player.PlayWaveform(samples, cfg.SampleRate, cfg.BitDepth)
 }
 
 // PlayWav plays a WAV file using SDL2 and SDL_mixer
