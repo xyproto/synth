@@ -13,10 +13,12 @@ Generate audio samples.
 
 * https://github.com/xyproto/synth/releases/download/v1.4.4/afr-kicks-2024.zip
 
-## General info
+## Build flags
 
 * Build with `go build -tags exclude_cimgui_glfw,sdl2` to depend on SDL2.
 * Build with `go build -tags exclude_cimgui_sdl` to depend on GLFW and the `ffplay` command.
+
+## General info
 
 * License: MIT
 * Verison: 1.5.2
