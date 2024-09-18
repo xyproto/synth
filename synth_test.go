@@ -189,7 +189,7 @@ func TestSaveAndLoadWav(t *testing.T) {
 	}
 	defer file.Close()
 
-	err = SaveToWav(file, samples, 44100)
+	err = SaveToWav(file, samples, 44100, 16)
 	if err != nil {
 		t.Fatalf("Failed to save WAV file: %v", err)
 	}
@@ -252,7 +252,7 @@ func TestWavSaveAndLoad(t *testing.T) {
 	defer file.Close()
 
 	// Save the waveform to a WAV file
-	err = SaveToWav(file, samples, 44100)
+	err = SaveToWav(file, samples, 44100, 16)
 	if err != nil {
 		t.Fatalf("Failed to save WAV file: %v", err)
 	}
@@ -300,6 +300,7 @@ func TestSaveTo(t *testing.T) {
 		StartFreq:        100.0,
 		EndFreq:          50.0,
 		SampleRate:       44100,
+		BitDepth:         16,
 		Duration:         1.0,
 		OscillatorLevels: []float64{1.0},
 	}
@@ -325,6 +326,7 @@ func TestGenerateKickWaveform(t *testing.T) {
 		EndFreq:          50.0,
 		Duration:         1.0,
 		SampleRate:       44100,
+		BitDepth:         16,
 		OscillatorLevels: []float64{1.0},
 	}
 
@@ -358,7 +360,7 @@ func TestSaveToWavEmptySamples(t *testing.T) {
 	}
 	defer file.Close()
 
-	err = SaveToWav(file, samples, 44100)
+	err = SaveToWav(file, samples, 44100, 16)
 	if err == nil {
 		t.Fatalf("Expected error when saving zero-length waveform, but got nil")
 	}
@@ -377,7 +379,7 @@ func TestSaveToWavNonEmptySamples(t *testing.T) {
 	}
 	defer file.Close()
 
-	err = SaveToWav(file, samples, 44100)
+	err = SaveToWav(file, samples, 44100, 16)
 	if err != nil {
 		t.Fatalf("Failed to save non-zero length waveform: %v", err)
 	}
@@ -445,6 +447,7 @@ func TestGenerateKick(t *testing.T) {
 		StartFreq:        100.0,
 		EndFreq:          50.0,
 		SampleRate:       44100,
+		BitDepth:         16,
 		Duration:         1.0,
 		Attack:           0.1,
 		Decay:            0.3,
@@ -508,6 +511,7 @@ func TestGenerateSweepWaveform(t *testing.T) {
 		StartFreq:    100.0,
 		EndFreq:      1000.0,
 		SampleRate:   44100,
+		BitDepth:     16,
 		Duration:     1.0,
 		WaveformType: WaveSine,
 	}
@@ -548,6 +552,7 @@ func TestCopySettings(t *testing.T) {
 		EndFreq:          880.0,
 		Duration:         1.0,
 		SampleRate:       44100,
+		BitDepth:         16,
 		WaveformType:     WaveSine,
 		OscillatorLevels: []float64{1.0, 0.8},
 	}
