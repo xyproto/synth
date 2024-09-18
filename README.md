@@ -15,8 +15,7 @@ Generate audio samples.
 
 ## Build flags
 
-* Build with `go build -tags exclude_cimgui_glfw,sdl2` to depend on SDL2.
-* Build with `go build -tags exclude_cimgui_sdl` to depend on GLFW and the `ffplay` command.
+* Build with `go build -tags sdl2` to use SDL2 instead of using GLFW and the `ffplay` command.
 
 ## General info
 
