@@ -35,11 +35,11 @@ func (player *Player) Close() {
 }
 
 // PlayKick generates and plays the current kick drum sound
-func (player *Player) PlayKick(cfg *Settings) error {
+func (player *Player) GeneratePlay(t string, cfg *Settings) error {
 	if !player.Initialized {
 		return errors.New("SDL2 Audio needs to be initialized first")
 	}
-	samples, err := cfg.GenerateKickWaveform()
+	samples, err := cfg.Generate(t)
 	if err != nil {
 		return err
 	}

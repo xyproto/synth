@@ -25,11 +25,6 @@ func (player *Player) Close() {
 	player.Initialized = false
 }
 
-// PlayKick generates and plays the current kick drum sound
-func (player *Player) PlayKick(cfg *Settings) error {
-	return player.GeneratePlay("kick", cfg)
-}
-
 // GeneratePlay generates a waveform of the given type and then plays it
 func (player *Player) GeneratePlay(t string, cfg *Settings) error {
 	if !player.Initialized {
