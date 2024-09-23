@@ -14,6 +14,7 @@ var (
 	version     = "0.0.1"
 	quality     int
 	bitDepth    int
+	channels    int
 	duration    time.Duration
 	baseFreq    float64
 	showVersion bool
@@ -28,6 +29,8 @@ func main() {
 	flag.BoolVar(&playSound, "p", false, "Play the generated sound") // Added -p flag
 	flag.IntVar(&quality, "quality", 96, "Sample rate in kHz (44, 48, 96, or 192)")
 	flag.IntVar(&bitDepth, "bitdepth", 16, "Bit depth of the audio (16 or 24)")
+	flag.IntVar(&channels, "channels", 1, "Channels (1 or 2)")
+
 	flag.DurationVar(&duration, "duration", 10*time.Second, "Duration of the audio (e.g., 10s, 5m)")
 	flag.Float64Var(&baseFreq, "freq", 55.0, "Base frequency for the bass sound (in Hz)")
 
@@ -86,7 +89,7 @@ func main() {
 	}
 	defer outFile.Close()
 
-	if err := synth.SaveToWav(outFile, limited, sampleRate, bitDepth); err != nil {
+	if err := synth.SaveToWav(outFile, limited, sampleRate, bitDepth, channels); err != nil {
 		fmt.Printf("Error saving WAV file: %v\n", err)
 		return
 	}
@@ -98,7 +101,7 @@ func main() {
 		fmt.Println("Playing the generated sound...")
 		player := synth.NewPlayer()
 		defer player.Close()
-		if err := player.PlayWaveform(limited, sampleRate, bitDepth); err != nil {
+		if err := player.PlayWaveform(limited, sampleRate, bitDepth, channels); err != nil {
 			fmt.Printf("Error playing sound: %v\n", err)
 			return
 		}

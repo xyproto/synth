@@ -109,8 +109,10 @@ func main() {
 	}
 	defer outFile.Close()
 
+	const channels = 1
+
 	// Save the final combined result to the output file
-	if err := synth.SaveToWav(outFile, combined, sampleRate, bitDepth); err != nil {
+	if err := synth.SaveToWav(outFile, combined, sampleRate, bitDepth, channels); err != nil {
 		log.Fatalf("Failed to save %s: %v", *outputFile, err)
 	}
 

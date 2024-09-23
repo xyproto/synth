@@ -189,7 +189,7 @@ func TestSaveAndLoadWav(t *testing.T) {
 	}
 	defer file.Close()
 
-	err = SaveToWav(file, samples, 44100, 16)
+	err = SaveToWav(file, samples, 44100, 16, 1)
 	if err != nil {
 		t.Fatalf("Failed to save WAV file: %v", err)
 	}
@@ -252,7 +252,7 @@ func TestWavSaveAndLoad(t *testing.T) {
 	defer file.Close()
 
 	// Save the waveform to a WAV file
-	err = SaveToWav(file, samples, 44100, 16)
+	err = SaveToWav(file, samples, 44100, 16, 1)
 	if err != nil {
 		t.Fatalf("Failed to save WAV file: %v", err)
 	}
@@ -360,7 +360,7 @@ func TestSaveToWavEmptySamples(t *testing.T) {
 	}
 	defer file.Close()
 
-	err = SaveToWav(file, samples, 44100, 16)
+	err = SaveToWav(file, samples, 44100, 16, 1)
 	if err == nil {
 		t.Fatalf("Expected error when saving zero-length waveform, but got nil")
 	}
@@ -379,7 +379,7 @@ func TestSaveToWavNonEmptySamples(t *testing.T) {
 	}
 	defer file.Close()
 
-	err = SaveToWav(file, samples, 44100, 16)
+	err = SaveToWav(file, samples, 44100, 16, 1)
 	if err != nil {
 		t.Fatalf("Failed to save non-zero length waveform: %v", err)
 	}

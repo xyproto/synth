@@ -28,6 +28,7 @@ func main() {
 	length := flag.Float64("length", 1000, "Length of the kick drum sample in milliseconds")
 	quality := flag.Int("quality", 96, "Sample rate in kHz (44, 48, 96, or 192)")
 	bitDepth := flag.Int("bitdepth", 16, "Bit depth of the audio (8, 16, 24 or 32)")
+	channels := flag.Int("channels", 1, "Channels (1 or 2)")
 	waveform := flag.Int("waveform", synth.WaveSine, "Waveform type (0: Sine, 1: Triangle, 2: Sawtooth, 3: Square)")
 	attack := flag.Float64("attack", 0.003, "Attack time in seconds")
 	decay := flag.Float64("decay", 0.3, "Decay time in seconds")
@@ -77,28 +78,28 @@ func main() {
 	var err error
 	switch {
 	case *kick606:
-		cfg, err = synth.New606(sampleRate, *length/1000.0, *bitDepth, nil)
+		cfg, err = synth.New606(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating 606 kick with a punchy, shorter sound.")
 	case *kick707:
-		cfg, err = synth.New707(sampleRate, *length/1000.0, *bitDepth, nil)
+		cfg, err = synth.New707(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating 707 kick with a classic, shorter punchy sound.")
 	case *kick808:
-		cfg, err = synth.New808(sampleRate, *length/1000.0, *bitDepth, nil)
+		cfg, err = synth.New808(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating 808 kick with deep sub-bass and smooth characteristics.")
 	case *kick909:
-		cfg, err = synth.New909(sampleRate, *length/1000.0, *bitDepth, nil)
+		cfg, err = synth.New909(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating 909 kick with punchy, mid-range presence and quick decay.")
 	case *kickLinnDrum:
-		cfg, err = synth.NewLinnDrum(sampleRate, *length/1000.0, *bitDepth, nil)
+		cfg, err = synth.NewLinnDrum(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating LinnDrum kick with an iconic, punchy sound.")
 	case *kickDeepHouse:
-		cfg, err = synth.NewDeepHouse(sampleRate, *length/1000.0, *bitDepth, nil)
+		cfg, err = synth.NewDeepHouse(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating Deep House kick with smooth, warm bass.")
 	case *kickExperimental:
-		cfg, err = synth.NewExperimental(sampleRate, *length/1000.0, *bitDepth, nil)
+		cfg, err = synth.NewExperimental(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating experimental-style kick with unique texture.")
 	default:
-		cfg, err = synth.NewSettings(150.0, 40.0, sampleRate, *length/1000.0, *bitDepth, nil)
+		cfg, err = synth.NewSettings(nil, 150.0, 40.0, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating default kick with user-defined characteristics.")
 	}
 
@@ -160,7 +161,7 @@ func main() {
 	defer outFile.Close()
 
 	// Save the waveform to the output file
-	if err := synth.SaveToWav(outFile, samples, sampleRate, *bitDepth); err != nil {
+	if err := synth.SaveToWav(outFile, samples, sampleRate, *bitDepth, *channels); err != nil {
 		fmt.Println("Failed to save kick to file:", err)
 		return
 	}
@@ -173,7 +174,7 @@ func main() {
 		// Use PlayWaveform to play the samples directly
 		player := synth.NewPlayer()
 		defer player.Close()
-		if err := player.PlayWaveform(samples, sampleRate, *bitDepth); err != nil {
+		if err := player.PlayWaveform(samples, sampleRate, *bitDepth, *channels); err != nil {
 			fmt.Println("Failed to play kick:", err)
 			return
 		}
