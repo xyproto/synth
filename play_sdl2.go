@@ -8,55 +8,40 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"sync"
-	"time"
 
 	"github.com/veandco/go-sdl2/mix"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-type AudioDeviceKey int
-
 // Player represents a struct with methods for playing audio
 type Player struct {
-	Initialized         bool
-	PlayingAudioDevices map[AudioDeviceKey]sdl.AudioDeviceID
+	Initialized bool
 }
-
-var mut sync.Mutex
 
 // NewPlayer tries to initialize SDL2 Audio and returns a Player struct
 func NewPlayer() *Player {
 	var player Player
-	player.PlayingAudioDevices = make(map[AudioDeviceKey]sdl.AudioDeviceID)
 	if err := sdl.Init(sdl.INIT_AUDIO); err != nil {
 		log.Printf("could not initialize SDL: %v", err)
 		return &player
 	}
-	player.Initialized = true
-	return &player
+	return &Player{Initialized: true}
 }
 
 // Close calls sdl.Quit and sets the Player struct as uninitialized
 func (player *Player) Close() {
-	mut.Lock()
-	defer mut.Unlock()
-	for _, audioDeviceID := range player.PlayingAudioDevices {
-		sdl.CloseAudioDevice(audioDeviceID)
-	}
-	player.PlayingAudioDevices = make(map[AudioDeviceKey]sdl.AudioDeviceID)
-	player.Initialized = false
 	sdl.Quit()
+	player.Initialized = false
 }
 
 // PlayKick generates and plays the current kick drum sound
-func (player *Player) GeneratePlay(t string, cfg *Settings) (AudioDeviceKey, time.Duration, error) {
+func (player *Player) GeneratePlay(t string, cfg *Settings) error {
 	if !player.Initialized {
-		return -1, 0, errors.New("SDL2 Audio needs to be initialized first")
+		return errors.New("SDL2 Audio needs to be initialized first")
 	}
 	samples, err := cfg.Generate(t)
 	if err != nil {
-		return -1, 0, err
+		return err
 	}
 	return player.PlayWaveform(samples, cfg.SampleRate, cfg.BitDepth, cfg.Channels)
 }
@@ -87,9 +72,9 @@ func (player *Player) PlayWav(filePath string) error {
 	return nil
 }
 
-func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, channels int) (AudioDeviceKey, time.Duration, error) {
+func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, channels int) error {
 	if !player.Initialized {
-		return -1, 0, errors.New("SDL2 Audio needs to be initialized first")
+		return errors.New("SDL2 Audio needs to be initialized first")
 	}
 	var desired, obtained sdl.AudioSpec
 	desired.Freq = int32(sampleRate)
@@ -105,25 +90,15 @@ func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, chan
 	case 32:
 		desired.Format = sdl.AUDIO_F32SYS
 	default:
-		return -1, 0, fmt.Errorf("unsupported bit depth: %d", bitDepth)
+		return fmt.Errorf("unsupported bit depth: %d", bitDepth)
 	}
 	audioDeviceID, err := sdl.OpenAudioDevice("", false, &desired, &obtained, 0)
 	if err != nil {
-		return -1, 0, fmt.Errorf("could not open audio device: %v", err)
+		return fmt.Errorf("could not open audio device: %v", err)
 	}
-	mut.Lock()
-	defer mut.Unlock()
-	var audioDeviceKey AudioDeviceKey = -1
-	var i AudioDeviceKey
-	for i = 0; i < 1024; i++ {
-		if _, found := player.PlayingAudioDevices[i]; !found {
-			player.PlayingAudioDevices[i] = audioDeviceID
-			audioDeviceKey = i
-			break
-		}
-	}
+	defer sdl.CloseAudioDevice(audioDeviceID)
 	if obtained.Format != desired.Format || obtained.Channels != desired.Channels || obtained.Freq != desired.Freq {
-		return audioDeviceKey, 0, fmt.Errorf("obtained audio spec does not match desired spec")
+		return fmt.Errorf("obtained audio spec does not match desired spec")
 	}
 	buf := new(bytes.Buffer)
 	switch bitDepth {
@@ -131,14 +106,14 @@ func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, chan
 		for _, sample := range samples {
 			sampleInt8 := int8(sample * 127)
 			if err := binary.Write(buf, binary.LittleEndian, sampleInt8); err != nil {
-				return audioDeviceKey, 0, fmt.Errorf("error converting float64 to int8: %v", err)
+				return fmt.Errorf("error converting float64 to int8: %v", err)
 			}
 		}
 	case 16:
 		for _, sample := range samples {
 			sampleInt16 := int16(sample * 32767)
 			if err := binary.Write(buf, binary.LittleEndian, sampleInt16); err != nil {
-				return audioDeviceKey, 0, fmt.Errorf("error converting float64 to int16: %v", err)
+				return fmt.Errorf("error converting float64 to int16: %v", err)
 			}
 		}
 	case 24:
@@ -149,65 +124,25 @@ func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, chan
 			bytes24[1] = byte((sampleInt32 >> 8) & 0xFF)
 			bytes24[2] = byte((sampleInt32 >> 16) & 0xFF)
 			if _, err := buf.Write(bytes24); err != nil {
-				return audioDeviceKey, 0, fmt.Errorf("error converting float64 to 24-bit: %v", err)
+				return fmt.Errorf("error converting float64 to 24-bit: %v", err)
 			}
 		}
 	case 32:
 		for _, sample := range samples {
 			sampleFloat32 := float32(sample)
 			if err := binary.Write(buf, binary.LittleEndian, sampleFloat32); err != nil {
-				return audioDeviceKey, 0, fmt.Errorf("error converting float64 to float32: %v", err)
+				return fmt.Errorf("error converting float64 to float32: %v", err)
 			}
 		}
 	default:
-		return audioDeviceKey, 0, fmt.Errorf("unsupported bit depth: %d", bitDepth)
+		return fmt.Errorf("unsupported bit depth: %d", bitDepth)
 	}
 	if err := sdl.QueueAudio(audioDeviceID, buf.Bytes()); err != nil {
-		return audioDeviceKey, 0, fmt.Errorf("could not queue audio data: %v", err)
+		return fmt.Errorf("could not queue audio data: %v", err)
 	}
 	sdl.PauseAudioDevice(audioDeviceID, false)
-
-	const silenceThreshold = 0.001
-
-	lastNonSilentIndex := len(samples) - 1
-	for i := len(samples) - 1; i >= 0; i-- {
-		if samples[i] > silenceThreshold || samples[i] < -silenceThreshold {
-			lastNonSilentIndex = i
-			break
-		}
+	for sdl.GetQueuedAudioSize(audioDeviceID) > 0 {
+		sdl.Delay(100)
 	}
-
-	adjustedSamples := lastNonSilentIndex + 1
-	adjustedDuration := time.Duration(float64(adjustedSamples) / float64(sampleRate) * float64(time.Second))
-
-	return audioDeviceKey, adjustedDuration, nil
-}
-
-// WaitClose will wait for the given duration using sdl.Delay and then close the audio device
-func (player *Player) WaitClose(audioDeviceKey AudioDeviceKey, t time.Duration) {
-	// sdl.GetQueuedAudioSize(audioDeviceID) > 0
-	sdl.Delay(uint32(t.Milliseconds()))
-	mut.Lock()
-	defer mut.Unlock()
-	for k, audioDeviceID := range player.PlayingAudioDevices {
-		if k == audioDeviceKey {
-			sdl.CloseAudioDevice(audioDeviceID)
-			delete(player.PlayingAudioDevices, audioDeviceKey)
-			break
-		}
-	}
-}
-
-// WaitClosePlus100 will wait for the given duration + 100 milliseconds, using sdl.Delay, and then close the audio device
-func (player *Player) WaitClosePlus100(audioDeviceKey AudioDeviceKey, t time.Duration) {
-	sdl.Delay(uint32(t.Milliseconds()) + 100)
-	mut.Lock()
-	defer mut.Unlock()
-	for k, audioDeviceID := range player.PlayingAudioDevices {
-		if k == audioDeviceKey {
-			sdl.CloseAudioDevice(audioDeviceID)
-			delete(player.PlayingAudioDevices, audioDeviceKey)
-			break
-		}
-	}
+	return nil
 }
