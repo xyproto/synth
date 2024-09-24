@@ -101,9 +101,10 @@ func main() {
 		fmt.Println("Playing the generated sound...")
 		player := synth.NewPlayer()
 		defer player.Close()
-		if err := player.PlayWaveform(limited, sampleRate, bitDepth, channels); err != nil {
+		if audioDeviceKey, playbackDuration, err := player.PlayWaveform(limited, sampleRate, bitDepth, channels); err != nil {
 			fmt.Printf("Error playing sound: %v\n", err)
-			return
+		} else {
+			player.WaitClosePlus100(audioDeviceKey, playbackDuration)
 		}
 	}
 }
