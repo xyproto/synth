@@ -125,37 +125,28 @@ func main() {
 	cfg.FadeDuration = *release // Match fade duration to release time
 	cfg.SmoothFrequencyTransitions = true
 
+	var noise int
+	switch strings.ToLower(*noiseType) {
+	case "white":
+		noise = synth.NoiseWhite
+	case "pink":
+		noise = synth.NoisePink
+	case "brown":
+		noise = synth.NoiseBrown
+	case "none":
+		noise = synth.NoiseNone
+	default:
+		fmt.Println("Invalid noise type. Choose from: none, white, pink, brown.")
+		os.Exit(1)
+	}
+	cfg.NoiseType = noise
+	cfg.NoiseAmount = *noiseAmount
+
 	// Generate the kick drum waveform
 	samples, err := cfg.GenerateKick()
 	if err != nil {
 		fmt.Println("Failed to generate kick:", err)
 		return
-	}
-
-	// Generate noise samples if needed
-	if strings.ToLower(*noiseType) != "none" && *noiseAmount > 0.0 {
-		numSamples := len(samples)
-		var noiseSamples []float64
-
-		switch strings.ToLower(*noiseType) {
-		case "white":
-			noiseSamples = synth.GenerateWhiteNoise(numSamples, *noiseAmount)
-		case "pink":
-			noiseSamples = synth.GeneratePinkNoise(numSamples, *noiseAmount)
-		case "brown":
-			noiseSamples = synth.GenerateBrownNoise(numSamples, *noiseAmount)
-		default:
-			fmt.Println("Invalid noise type. Choose from: none, white, pink, brown.")
-			os.Exit(1)
-		}
-
-		// Mix noise samples into the kick samples
-		for i := 0; i < numSamples; i++ {
-			samples[i] += noiseSamples[i]
-		}
-
-		// Apply limiter to prevent clipping
-		samples = synth.Limiter(samples)
 	}
 
 	// Apply a fade-out at the end to prevent crackling noise
