@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/veandco/go-sdl2/mix"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -61,32 +60,6 @@ func (player *Player) GeneratePlay(t string, cfg *Settings) (AudioDeviceKey, tim
 	return player.PlayWaveform(samples, cfg.SampleRate, cfg.BitDepth, cfg.Channels)
 }
 
-// PlayWav plays a WAV file using SDL2 and SDL_mixer
-func (player *Player) PlayWav(filePath string) error {
-	if !player.Initialized {
-		return errors.New("SDL2 Audio needs to be initialized first")
-	}
-	// Open the audio device
-	if err := mix.OpenAudio(44100, sdl.AUDIO_S16SYS, 2, 1024); err != nil {
-		return fmt.Errorf("could not open audio: %v", err)
-	}
-	defer mix.CloseAudio()
-	// Load the WAV file
-	music, err := mix.LoadMUS(filePath)
-	if err != nil {
-		return fmt.Errorf("could not load music file: %v", err)
-	}
-	defer music.Free()
-	if err := music.Play(1); err != nil {
-		return fmt.Errorf("could not play music: %v", err)
-	}
-	// Wait until the music is finished playing
-	for mix.PlayingMusic() {
-		sdl.Delay(100)
-	}
-	return nil
-}
-
 func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, channels int) (AudioDeviceKey, time.Duration, error) {
 	if !player.Initialized {
 		return -1, 0, errors.New("SDL2 Audio needs to be initialized first")
@@ -95,15 +68,21 @@ func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, chan
 	desired.Freq = int32(sampleRate)
 	desired.Channels = uint8(channels)
 	desired.Samples = 4096
+	sampleSize := 0 // Track sample size for duration calculation
+
 	switch bitDepth {
 	case 8:
 		desired.Format = sdl.AUDIO_S8
+		sampleSize = 1 // 8-bit
 	case 16:
 		desired.Format = sdl.AUDIO_S16LSB
+		sampleSize = 2 // 16-bit
 	case 24:
 		desired.Format = sdl.AUDIO_S32LSB
+		sampleSize = 3 // 24-bit packed
 	case 32:
 		desired.Format = sdl.AUDIO_F32SYS
+		sampleSize = 4 // 32-bit
 	default:
 		return -1, 0, fmt.Errorf("unsupported bit depth: %d", bitDepth)
 	}
@@ -178,7 +157,7 @@ func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, chan
 	}
 
 	adjustedSamples := lastNonSilentIndex + 1
-	adjustedDuration := time.Duration(float64(adjustedSamples) / float64(sampleRate) * float64(time.Second))
+	adjustedDuration := time.Duration(float64(adjustedSamples*sampleSize*channels) / float64(sampleRate) * float64(time.Second))
 
 	return audioDeviceKey, adjustedDuration, nil
 }
