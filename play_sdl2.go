@@ -146,7 +146,7 @@ func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, chan
 	}
 	sdl.PauseAudioDevice(audioDeviceID, false)
 
-	const silenceThreshold = 0.001
+	const silenceThreshold = 0.01
 
 	lastNonSilentIndex := len(samples) - 1
 	for i := len(samples) - 1; i >= 0; i-- {
