@@ -24,41 +24,35 @@ type Player struct {
 
 var mut sync.Mutex
 
-var theContext *oto.Context
-
 // NewPlayer initializes Oto Audio with system defaults and returns a Player struct
 func NewPlayer() *Player {
-	if theContext == nil {
-		// Create Oto context options using common default values
-		op := &oto.NewContextOptions{
-			SampleRate:   48000,                   // Adjust sample rate to 48000 for better sound quality
-			ChannelCount: 2,                       // Stereo (2 channels)
-			Format:       oto.FormatSignedInt16LE, // Use 16-bit signed integer format for better consistency with SDL2
-		}
-
-		// Initialize Oto context
-		ctx, readyChan, err := oto.NewContext(op)
-		if err != nil {
-			fmt.Printf("could not initialize Oto: %v", err)
-			return nil
-		}
-
-		// Wait for the audio device to be ready
-		<-readyChan
-
-		theContext = ctx
+	// Create Oto context options using common default values
+	op := &oto.NewContextOptions{
+		SampleRate:   44100,                   // You could adjust this if needed
+		ChannelCount: 2,                       // Stereo (2 channels)
+		Format:       oto.FormatSignedInt16LE, // Signed 16-bit integers in little-endian format
 	}
+
+	// Initialize Oto context
+	otoCtx, readyChan, err := oto.NewContext(op)
+	if err != nil {
+		fmt.Printf("could not initialize Oto: %v", err)
+		return nil
+	}
+
+	// Wait for the audio device to be ready
+	<-readyChan
 
 	player := &Player{
 		Initialized:         true,
 		PlayingAudioDevices: make(map[AudioDeviceKey]*oto.Player),
-		ctx:                 theContext,
+		ctx:                 otoCtx,
 	}
 
 	return player
 }
 
-// Close does not close the Oto context, but stops all playing audio and clears resources.
+// Close stops all audio and releases resources
 func (player *Player) Close() {
 	mut.Lock()
 	defer mut.Unlock()
@@ -143,8 +137,8 @@ func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, chan
 	// Start playback
 	audioPlayer.Play()
 
-	// Adjust silence threshold to be more forgiving for Oto playback
-	const silenceThreshold = 0.01
+	// Calculate adjusted duration including bit depth and channels
+	const silenceThreshold = 0.001
 
 	lastNonSilentIndex := len(samples) - 1
 	for i := len(samples) - 1; i >= 0; i-- {
