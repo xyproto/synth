@@ -424,9 +424,9 @@ func TestApplyPanning(t *testing.T) {
 
 func TestGenerateNoise(t *testing.T) {
 	length := 100
-	whiteNoise := GenerateNoise(NoiseWhite, length, 0.5)
-	pinkNoise := GenerateNoise(NoisePink, length, 0.5)
-	brownNoise := GenerateNoise(NoiseBrown, length, 0.5)
+	whiteNoise := GenerateWhiteNoise(length, 0.5)
+	pinkNoise := GeneratePinkNoise(length, 0.5)
+	brownNoise := GenerateBrownNoise(length, 0.5)
 
 	if len(whiteNoise) != length || len(pinkNoise) != length || len(brownNoise) != length {
 		t.Errorf("Expected noise of length %d, got different lengths", length)
@@ -550,18 +550,31 @@ func TestGenerateNoiseTypes(t *testing.T) {
 	length := 1000
 	amount := 0.5
 	tolerance := 0.05 // Allow a 10% tolerance
-	noiseTypes := []int{NoiseWhite, NoisePink, NoiseBrown}
-
-	for _, noiseType := range noiseTypes {
-		noise := GenerateNoise(noiseType, length, amount)
-		if len(noise) != length {
-			t.Errorf("Expected noise length of %d, got %d for noise type %d", length, len(noise), noiseType)
+	noise := GenerateWhiteNoise(length, amount)
+	if len(noise) != length {
+		t.Errorf("Expected noise length of %d, got %d for noise type %s", length, len(noise), "white")
+	}
+	for i, v := range noise {
+		if v < -(amount+tolerance) || v > (amount+tolerance) {
+			t.Errorf("Noise value at index %d out of range [%.6f, %.6f]: %f", i, -(amount + tolerance), amount+tolerance, v)
 		}
-
-		for i, v := range noise {
-			if v < -(amount+tolerance) || v > (amount+tolerance) {
-				t.Errorf("Noise value at index %d out of range [%.6f, %.6f]: %f", i, -(amount + tolerance), amount+tolerance, v)
-			}
+	}
+	noise = GeneratePinkNoise(length, amount)
+	if len(noise) != length {
+		t.Errorf("Expected noise length of %d, got %d for noise type %s", length, len(noise), "pink")
+	}
+	for i, v := range noise {
+		if v < -(amount+tolerance) || v > (amount+tolerance) {
+			t.Errorf("Noise value at index %d out of range [%.6f, %.6f]: %f", i, -(amount + tolerance), amount+tolerance, v)
+		}
+	}
+	noise = GenerateBrownNoise(length, amount)
+	if len(noise) != length {
+		t.Errorf("Expected noise length of %d, got %d for noise type %s", length, len(noise), "brown")
+	}
+	for i, v := range noise {
+		if v < -(amount+tolerance) || v > (amount+tolerance) {
+			t.Errorf("Noise value at index %d out of range [%.6f, %.6f]: %f", i, -(amount + tolerance), amount+tolerance, v)
 		}
 	}
 }

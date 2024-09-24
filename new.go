@@ -28,8 +28,6 @@ func NewSettings(output io.WriteSeeker, startFreq, endFreq, duration float64, sa
 		FilterCutoff:               5000,                             // Filter cutoff frequency (Hz)
 		Sweep:                      0.7,                              // Pitch sweep amount
 		PitchDecay:                 0.4,                              // Pitch envelope decay time
-		NoiseType:                  NoiseNone,                        // Default to no noise
-		NoiseAmount:                0.0,                              // Amount of noise to mix in
 		NumOscillators:             1,                                // Default to 1 oscillator
 		OscillatorLevels:           []float64{1.0},                   // Default oscillator level
 		SaturatorAmount:            0.3,                              // Saturation amount
