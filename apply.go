@@ -2,6 +2,8 @@ package synth
 
 import (
 	"math"
+
+	"github.com/xyproto/audioeffects"
 )
 
 // ApplyEnvelope applies an ADSR envelope to the waveform
@@ -55,21 +57,9 @@ func (cfg *Settings) ApplyDrive(sample float64) float64 {
 	return sample
 }
 
+// ApplyPitchModulation applies pitch modulation (vibrato) to the samples using the audioeffects package.
 func ApplyPitchModulation(samples []float64, modFreq, modDepth float64, sampleRate int) []float64 {
-	modulated := make([]float64, len(samples))
-	for i := 0; i < len(samples); i++ {
-		t := float64(i) / float64(sampleRate)
-		mod := math.Sin(2*math.Pi*modFreq*t) * modDepth
-		value := samples[i] * math.Pow(2, mod)
-		// Clamp the value
-		if value > 1.0 {
-			value = 1.0
-		} else if value < -1.0 {
-			value = -1.0
-		}
-		modulated[i] = value
-	}
-	return modulated
+	return audioeffects.PitchModulation(samples, modFreq, modDepth, sampleRate)
 }
 
 // ApplyPanning applies stereo panning to the samples. pan should be in the range [-1, 1], where -1 is full left and 1 is full right.
