@@ -2,5 +2,5 @@
 
 Play a given audio sample or wav file.
 
-* Version: 0.0.1
+* Version: 0.0.2
 * License: MIT
