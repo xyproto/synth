@@ -8,6 +8,7 @@ require (
 	github.com/veandco/go-sdl2 v0.4.40
 	github.com/xyproto/audioeffects v0.11.1
 	github.com/xyproto/files v1.7.0
+	github.com/xyproto/playsample v0.0.1
 )
 
 require (
