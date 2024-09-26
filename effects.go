@@ -12,22 +12,7 @@ func ApplyEnvelope(samples []float64, attack, decay, sustain, release float64, s
 // ApplyEnvelopeAtTime generates the ADSR envelope value at a specific normalized time.
 // This function retains the custom implementation as audioeffects does not expose envelope evaluation at a specific time.
 func (cfg *Settings) ApplyEnvelopeAtTime(t float64) float64 {
-	attack, decay, sustain, release := cfg.Attack, cfg.Decay, cfg.Sustain, cfg.Release
-	duration := cfg.Duration
-
-	if t < attack {
-		return t / attack
-	}
-	if t < attack+decay {
-		return 1.0 - (t-attack)/decay*(1.0-sustain)
-	}
-	if t < duration-release {
-		return sustain
-	}
-	if t < duration {
-		return sustain * (1.0 - (t-(duration-release))/release)
-	}
-	return 0.0
+	return audioeffects.EnvelopeAtTime(t, cfg.Attack, cfg.Decay, cfg.Sustain, cfg.Release, cfg.Duration)
 }
 
 // ApplyDrive applies a drive (distortion) effect to a single sample using the audioeffects package.
@@ -186,7 +171,7 @@ func ApplyMultibandCompression(samples []float64, bands []struct {
 // ApplyGranularSynthesis applies granular synthesis to the samples using the audioeffects package.
 // grainSize specifies the size of each grain in samples.
 // overlap determines the overlap between consecutive grains.
-func ApplyGranularSynthesis(samples []float64, grainSize, overlap int, sampleRate int) []float64 {
+func ApplyGranularSynthesis(samples []float64, grainSize, overlap, sampleRate int) []float64 {
 	return audioeffects.GranularSynthesis(samples, grainSize, overlap, sampleRate)
 }
 
@@ -204,7 +189,7 @@ func ApplyFMSynthesis(duration, carrierFreq, modFreq, modIndex, amplitude float6
 
 // ApplyAddPartials adds harmonic partials to the samples using the audioeffects package.
 // partials should contain frequency and amplitude pairs.
-func ApplyAddPartials(duration, amplitude, frequency float64, partials []float64, ampEnv []float64, sampleRate int) []float64 {
+func ApplyAddPartials(duration, amplitude, frequency float64, partials, ampEnv []float64, sampleRate int) []float64 {
 	return audioeffects.AddPartials(duration, amplitude, frequency, partials, ampEnv, sampleRate)
 }
 
@@ -213,6 +198,6 @@ func ApplyAddPartials(duration, amplitude, frequency float64, partials []float64
 // amplitude sets the noise amplitude.
 // b1 is a scaling factor for the noise.
 // ampEnv defines the amplitude envelope.
-func ApplySubtractOp(duration, amplitude float64, b1 float64, ampEnv []float64, sampleRate int) []float64 {
+func ApplySubtractOp(duration, amplitude, b1 float64, ampEnv []float64, sampleRate int) []float64 {
 	return audioeffects.SubtractOp(duration, amplitude, b1, ampEnv, sampleRate)
 }
