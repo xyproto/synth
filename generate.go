@@ -118,7 +118,7 @@ func (cfg *Settings) GenerateClosedHH() ([]float64, error) {
 	samples = Drive(samples, cfg.Drive)
 
 	// Apply a fade-out to give the hi-hat a quick decay, typical of a closed hi-hat
-	samples = ApplyFadeOut(samples, cfg.FadeDuration, cfg.SampleRate, LinearFade)
+	samples = ApplyFadeOut(samples, cfg.FadeDuration, cfg.SampleRate)
 
 	// Limit the amplitude to avoid clipping
 	samples = Limiter(samples)
@@ -152,7 +152,7 @@ func (cfg *Settings) GenerateOpenHH() ([]float64, error) {
 	samples = Drive(samples, cfg.Drive)
 
 	// Apply a fade-out to simulate the natural decay of an open hi-hat
-	samples = ApplyFadeOut(samples, cfg.FadeDuration, cfg.SampleRate, LinearFade)
+	samples = ApplyFadeOut(samples, cfg.FadeDuration, cfg.SampleRate)
 
 	// Limit the amplitude to avoid clipping
 	samples = Limiter(samples)

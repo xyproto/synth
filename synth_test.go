@@ -476,7 +476,8 @@ func TestApplyChorus(t *testing.T) {
 	delaySec := 0.005
 	depth := 0.5
 	rate := 1.5
-	modulated := ApplyChorus(samples, sampleRate, delaySec, depth, rate)
+	mix := 0.5
+	modulated := ApplyChorus(samples, sampleRate, delaySec, depth, rate, mix)
 
 	if len(modulated) != len(samples) {
 		t.Errorf("Expected chorus-modulated waveform length of %d, got %d", len(samples), len(modulated))
@@ -793,7 +794,7 @@ func TestApplyFadeInLinear(t *testing.T) {
 
 	fadeDuration := 0.5 // seconds
 	sampleRate := 100   // for simplicity
-	fadedSamples := ApplyFadeIn(samples, fadeDuration, sampleRate, LinearFade)
+	fadedSamples := ApplyFadeIn(samples, fadeDuration, sampleRate)
 	expectedFadeSamples := int(fadeDuration * float64(sampleRate))
 	for i := 0; i < expectedFadeSamples; i++ {
 		expectedMultiplier := float64(i) / float64(expectedFadeSamples)
@@ -816,7 +817,7 @@ func TestApplyFadeInQuadratic(t *testing.T) {
 
 	fadeDuration := 0.5 // seconds
 	sampleRate := 100   // for simplicity
-	fadedSamples := ApplyFadeIn(samples, fadeDuration, sampleRate, QuadraticFade)
+	fadedSamples := ApplyQuadraticFadeIn(samples, fadeDuration, sampleRate)
 	expectedFadeSamples := int(fadeDuration * float64(sampleRate))
 	for i := 0; i < expectedFadeSamples; i++ {
 		tVal := float64(i) / float64(expectedFadeSamples)
@@ -840,7 +841,7 @@ func TestApplyFadeOutLinear(t *testing.T) {
 
 	fadeDuration := 0.5 // seconds
 	sampleRate := 100   // for simplicity
-	fadedSamples := ApplyFadeOut(samples, fadeDuration, sampleRate, LinearFade)
+	fadedSamples := ApplyFadeOut(samples, fadeDuration, sampleRate)
 	expectedFadeSamples := int(fadeDuration * float64(sampleRate))
 	totalSamples := len(samples)
 	for i := 0; i < expectedFadeSamples; i++ {
@@ -865,7 +866,7 @@ func TestApplyFadeOutQuadratic(t *testing.T) {
 
 	fadeDuration := 0.5 // seconds
 	sampleRate := 100   // for simplicity
-	fadedSamples := ApplyFadeOut(samples, fadeDuration, sampleRate, QuadraticFade)
+	fadedSamples := ApplyQuadraticFadeOut(samples, fadeDuration, sampleRate)
 	expectedFadeSamples := int(fadeDuration * float64(sampleRate))
 	totalSamples := len(samples)
 	for i := 0; i < expectedFadeSamples; i++ {
