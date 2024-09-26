@@ -93,7 +93,54 @@ func main() {
 }
 ```
 
+### Exported functions in this package
+
+```
+func lowPassCoefficients(filterType string, freq, Q, sampleRate float64) (float64, float64, float64, float64, float64)
+func BiquadFilter(samples []float64, filterType string, freq, Q, sampleRate float64) []float64
+func FadeIn(samples []float64, duration float64, sampleRate int) []float64
+func FadeOut(samples []float64, duration float64, sampleRate int) []float64
+func LowPassFilter(samples []float64, cutoffFreq float64, sampleRate int) []float64
+func HighPassFilter(samples []float64, cutoffFreq float64, sampleRate int) []float64
+func BandPassFilter(samples []float64, lowFreq, highFreq float64, sampleRate int) []float64
+func NoiseGate(samples []float64, threshold, attack, release float64, sampleRate int) []float64
+func StereoDelay(left, right []float64, sampleRate int, delayTimeLeft, delayTimeRight float64, feedback, mix float64) ([]float64, []float64)
+func Expander(samples []float64, threshold, ratio, attack, release float64, sampleRate int) []float64
+func SoftClip(sample, drive float64) float64
+func SoftClippingDistortion(samples []float64, drive float64) []float64
+func SidechainCompressor(target, trigger []float64, threshold, ratio, attack, release float64, sampleRate int) []float64
+func Compressor(samples []float64, threshold, ratio, attack, release float64, sampleRate int) []float64
+func Envelope(samples []float64, attack, decay, sustainLevel, release float64, sampleRate int) []float64
+func Panning(samples []float64, pan float64) ([]float64, []float64)
+func Tremolo(samples []float64, sampleRate int, rate, depth float64) []float64
+func Flanger(samples []float64, sampleRate int, baseDelay, modDepth, modRate, feedback, mix float64) []float64
+func Phaser(samples []float64, sampleRate int, rate, depth, feedback float64) []float64
+func RingModulation(samples []float64, carrierFreq float64, sampleRate int) []float64
+func WahWah(samples []float64, sampleRate int, baseFreq, sweepFreq, Q float64) []float64
+func StereoWidening(left, right []float64, width float64) ([]float64, []float64)
+func MultibandCompression(samples []float64, bands []struct
+func PitchShift(samples []float64, semitones float64) []float64
+func FrequencyModulation(samples []float64, carrierFreq, modDepth, sampleRate float64) []float64
+func PitchModulation(samples []float64, modFreq, modDepth float64, sampleRate int) []float64
+func Reverb(samples []float64, sampleRate int, delayTimes []float64, decays []float64, mix float64) []float64
+func Chorus(samples []float64, sampleRate int, delay, depth, rate, mix float64) []float64
+func Bitcrusher(samples []float64, bitDepth int, sampleRateReduction int) []float64
+func Drive(sample, drive float64) float64
+func Limiter(samples []float64) []float64
+func NormalizeSamples(samples []float64, targetPeak float64) []float64
+func SubtractOp(duration, amplitude float64, b1 float64, ampEnv []float64, sampleRate int) []float64
+func AddPartials(duration, amplitude, frequency float64, partials []float64, ampEnv []float64, sampleRate int) []float64
+func FMSynthesis(duration, carrierFreq, modFreq, modIndex, amplitude float64, ampEnv []float64, sampleRate int) []float64
+func KarplusStrong(duration, amplitude float64, p int, b float64, sampleRate int) []float64
+func GranularSynthesis(samples []float64, grainSize, overlap int, sampleRate int) []float64
+func QuadraticFadeIn(samples []float64, duration float64, sampleRate int) []float64
+func QuadraticFadeOut(samples []float64, duration float64, sampleRate int) []float64
+func EnvelopeAtTime(t, attack, decay, sustainLevel, release, duration float64) float64
+func Shimmer(samples []float64, sampleRate int, delayTime float64, mix float64, pitchShiftSemitones float64, feedback float64) []float64
+func ShimmerBitcrusher(samples []float64, sampleRate int, delayTime float64, mix float64, pitchShiftSemitones float64, bitDepth int, sampleRateReduction int, feedback float64) []float64
+```
+
 ### General info
 
-* Version: 0.9.1
+* Version: 0.11.1
 * License: MIT

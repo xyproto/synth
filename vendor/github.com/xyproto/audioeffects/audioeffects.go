@@ -263,9 +263,10 @@ func amplitudeEnvelope(env []float64, position float64) float64 {
 	if position >= env[len(env)-2] {
 		return env[len(env)-1]
 	}
+	var t float64
 	for i := 0; i < len(env)-2; i += 2 {
 		if position >= env[i] && position <= env[i+2] {
-			t := (position - env[i]) / (env[i+2] - env[i])
+			t = (position - env[i]) / (env[i+2] - env[i])
 			return (1-t)*env[i+1] + t*env[i+3]
 		}
 	}
@@ -354,8 +355,7 @@ func Tremolo(samples []float64, sampleRate int, rate, depth float64) []float64 {
 	lfoPhase := 0.0
 	lfoIncrement := rate / float64(sampleRate)
 	for i, sample := range samples {
-		mod := 1.0 - depth + depth*math.Sin(2*math.Pi*lfoPhase)
-		modulated[i] = sample * mod
+		modulated[i] = sample * (1.0 - depth + depth*math.Sin(2*math.Pi*lfoPhase))
 		lfoPhase += lfoIncrement
 		if lfoPhase >= 1.0 {
 			lfoPhase -= 1.0
@@ -646,6 +646,7 @@ func Chorus(samples []float64, sampleRate int, delay, depth, rate, mix float64) 
 	return chorused
 }
 
+// Bitcrusher applies bit depth and sample rate reduction to the audio samples.
 func Bitcrusher(samples []float64, bitDepth int, sampleRateReduction int) []float64 {
 	if bitDepth < 1 {
 		bitDepth = 1
@@ -658,11 +659,15 @@ func Bitcrusher(samples []float64, bitDepth int, sampleRateReduction int) []floa
 	}
 	step := 1.0 / math.Pow(2, float64(bitDepth))
 	bitcrushed := make([]float64, len(samples))
-	for i, sample := range samples {
-		bitcrushed[i] = math.Round(sample/step) * step
-		if sampleRateReduction > 1 && i%sampleRateReduction != 0 {
-			bitcrushed[i] = 0.0
+	var currentSample float64
+	for i := 0; i < len(samples); i++ {
+		// Apply bit depth reduction (quantization)
+		quantized := math.Round(samples[i]/step) * step
+		// Apply sample rate reduction by holding the current sample
+		if i%sampleRateReduction == 0 {
+			currentSample = quantized
 		}
+		bitcrushed[i] = currentSample
 		if bitcrushed[i] > 1.0 {
 			bitcrushed[i] = 1.0
 		} else if bitcrushed[i] < -1.0 {
@@ -783,4 +788,163 @@ func GranularSynthesis(samples []float64, grainSize, overlap int, sampleRate int
 		}
 	}
 	return output
+}
+
+// QuadraticFadeIn applies a quadratic fade-in to the provided samples.
+// The fade-in starts slowly and accelerates towards the end of the duration.
+func QuadraticFadeIn(samples []float64, duration float64, sampleRate int) []float64 {
+	faded := make([]float64, len(samples))
+	fadeSamples := int(duration * float64(sampleRate))
+	if fadeSamples > len(samples) {
+		fadeSamples = len(samples)
+	}
+	var t float64
+	for i := 0; i < len(samples); i++ {
+		if i < fadeSamples {
+			t = float64(i) / float64(fadeSamples)
+			faded[i] = samples[i] * t * t
+		} else {
+			faded[i] = samples[i]
+		}
+	}
+	return faded
+}
+
+// QuadraticFadeOut applies a quadratic fade-out to the provided samples.
+// The fade-out starts quickly and decelerates towards the end of the duration.
+func QuadraticFadeOut(samples []float64, duration float64, sampleRate int) []float64 {
+	faded := make([]float64, len(samples))
+	fadeSamples := int(duration * float64(sampleRate))
+	startFade := len(samples) - fadeSamples
+	if startFade < 0 {
+		startFade = 0
+	}
+	var t float64
+	for i := 0; i < len(samples); i++ {
+		if i >= startFade {
+			t = float64(len(samples)-i) / float64(fadeSamples)
+			faded[i] = samples[i] * t * t
+		} else {
+			faded[i] = samples[i]
+		}
+	}
+	return faded
+}
+
+// EnvelopeAtTime calculates the envelope value at a specific normalized time point.
+func EnvelopeAtTime(t, attack, decay, sustainLevel, release, duration float64) float64 {
+	if t < 0 {
+		return 0.0
+	}
+	if t < attack {
+		return t / attack
+	}
+	if t < attack+decay {
+		return 1.0 - ((t-attack)/decay)*(1.0-sustainLevel)
+	}
+	if t < duration-release {
+		return sustainLevel
+	}
+	if t < duration {
+		return sustainLevel * (1.0 - (t-(duration-release))/release)
+	}
+	return 0.0
+}
+
+// Shimmer applies a shimmer effect with adjustable pitch shift and feedback to the provided audio samples.
+// It adds a delayed and pitch-shifted copy of the signal to itself with optional feedback.
+func Shimmer(samples []float64, sampleRate int, delayTime float64, mix float64, pitchShiftSemitones float64, feedback float64) []float64 {
+	if delayTime < 0 {
+		delayTime = 0
+	}
+	if mix < 0 {
+		mix = 0
+	} else if mix > 1.0 {
+		mix = 1.0
+	}
+	if feedback < 0.0 {
+		feedback = 0.0
+	} else if feedback >= 1.0 {
+		feedback = 0.99 // Prevent infinite feedback
+	}
+
+	// Calculate the number of samples to delay
+	delaySamples := int(delayTime * float64(sampleRate))
+	if delaySamples >= len(samples) {
+		delaySamples = len(samples) - 1
+	}
+
+	// Pitch shift by the specified number of semitones
+	pitchShiftFactor := math.Pow(2, pitchShiftSemitones/12.0)
+
+	// Create the pitch-shifted copy
+	pitchShifted := pitchShift(samples, pitchShiftFactor)
+
+	// Prepare the shimmer signal with delay and feedback
+	shimmer := make([]float64, len(samples))
+	for i := 0; i < len(shimmer); i++ {
+		if i >= delaySamples && (i-delaySamples) < len(pitchShifted) {
+			shimmer[i] = pitchShifted[i-delaySamples] + shimmer[i-delaySamples]*feedback
+		} else {
+			shimmer[i] = 0.0
+		}
+	}
+
+	// Mix the shimmer signal with the original signal
+	output := make([]float64, len(samples))
+	for i := 0; i < len(samples); i++ {
+		output[i] = samples[i]*(1.0-mix) + shimmer[i]*mix
+
+		// Clamp the output to [-1.0, 1.0] to prevent clipping
+		if output[i] > 1.0 {
+			output[i] = 1.0
+		} else if output[i] < -1.0 {
+			output[i] = -1.0
+		}
+	}
+
+	return output
+}
+
+// pitchShift shifts the pitch of the audio samples by the given factor.
+// A factor >1.0 shifts the pitch up, while a factor <1.0 shifts it down.
+func pitchShift(samples []float64, factor float64) []float64 {
+	if factor <= 0 {
+		return samples
+	}
+
+	originalLength := len(samples)
+	newLength := int(float64(originalLength) / factor)
+	pitched := make([]float64, newLength)
+
+	for i := 0; i < newLength; i++ {
+		origIndex := float64(i) * factor
+		indexFloor := int(math.Floor(origIndex))
+		indexCeil := indexFloor + 1
+		if indexCeil >= originalLength {
+			indexCeil = originalLength - 1
+		}
+		weight := origIndex - float64(indexFloor)
+		pitched[i] = samples[indexFloor]*(1.0-weight) + samples[indexCeil]*weight
+	}
+
+	return pitched
+}
+
+// ShimmerBitcrusher applies both Shimmer and Bitcrusher effects to the provided audio samples.
+// The Shimmer effect is applied first, followed by the Bitcrusher effect.
+//
+// Parameters:
+// - samples: The input audio samples to be processed.
+// - sampleRate: The sample rate of the audio in Hz.
+// - delayTime: The delay time in seconds before the shimmer is mixed back.
+// - mix: The mix level of the shimmer effect (0.0 to 1.0).
+// - pitchShiftSemitones: The number of semitones to shift the pitch for the shimmer.
+// - bitDepth: The number of bits to reduce the sample precision in bitcrushing.
+// - sampleRateReduction: The number of samples to hold each sample value in bitcrushing.
+//
+// Returns:
+// - A new slice of samples with both Shimmer and Bitcrusher effects applied.
+func ShimmerBitcrusher(samples []float64, sampleRate int, delayTime float64, mix float64, pitchShiftSemitones float64, bitDepth int, sampleRateReduction int, feedback float64) []float64 {
+	return Bitcrusher(Shimmer(samples, sampleRate, delayTime, mix, pitchShiftSemitones, feedback), bitDepth, sampleRateReduction)
 }
