@@ -1,4 +1,4 @@
-//go:build sdl2
+//go:build !ff
 
 package playsample
 
@@ -8,9 +8,15 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/veandco/go-sdl2/mix"
 	"github.com/veandco/go-sdl2/sdl"
+)
+
+var (
+	audioDevice *sdl.AudioDeviceID
+	mut         sync.Mutex
 )
 
 // Player represents a struct with methods for playing audio
@@ -84,7 +90,17 @@ func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, chan
 	if err != nil {
 		return fmt.Errorf("could not open audio device: %v", err)
 	}
-	defer sdl.CloseAudioDevice(audioDeviceID)
+	mut.Lock()
+	audioDevice = &audioDeviceID
+	mut.Unlock()
+	defer func() {
+		mut.Lock()
+		if *audioDevice == audioDeviceID {
+			audioDevice = nil
+		}
+		sdl.CloseAudioDevice(audioDeviceID)
+		mut.Unlock()
+	}()
 	if obtained.Format != desired.Format || obtained.Channels != desired.Channels || obtained.Freq != desired.Freq {
 		return fmt.Errorf("obtained audio spec does not match desired spec")
 	}
@@ -129,8 +145,12 @@ func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, chan
 		return fmt.Errorf("could not queue audio data: %v", err)
 	}
 	sdl.PauseAudioDevice(audioDeviceID, false)
-	for sdl.GetQueuedAudioSize(audioDeviceID) > 0 {
+	for sdl.GetQueuedAudioSize(*audioDevice) > 0 {
 		sdl.Delay(100)
 	}
 	return nil
+}
+
+func (player *Player) Done() bool {
+	return !mix.PlayingMusic()
 }

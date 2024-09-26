@@ -1,4 +1,4 @@
-//go:build !sdl2
+//go:build ff
 
 package playsample
 
@@ -72,4 +72,18 @@ func FFPlayWavWithSampleRate(filePath string, sampleRate int) error {
 		return fmt.Errorf("error playing sound with ffplay: %v", err)
 	}
 	return cmd.Wait()
+}
+
+// Done uses pgrep to check if ffplay is running
+func (player *Player) Done() bool {
+	cmd := exec.Command("pgrep", "ffplay")
+	err := cmd.Start()
+	if err != nil {
+		panic(err) // pgrep not found
+	}
+	err = cmd.Wait()
+	if err != nil {
+		return true // not found with pgrep
+	}
+	return false // no errors, pgrep found ffplay running
 }
