@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/xyproto/playsample"
 	"github.com/xyproto/synth"
 )
 
@@ -44,7 +45,7 @@ func main() {
 	// Load the first input file to initialize the combined samples and sample rate
 	inputFiles := flag.Args()
 	firstFile := inputFiles[0]
-	combined, sampleRate, err := synth.LoadWav(firstFile, true)
+	combined, sampleRate, err := playsample.LoadWav(firstFile, true)
 	if err != nil {
 		log.Fatalf("Failed to load %s: %v", firstFile, err)
 	}
@@ -55,7 +56,7 @@ func main() {
 	// Process additional files and mix them using LinearSummation
 	for _, inputFile := range inputFiles[1:] { // Start from the second file
 		// Load the next file
-		wave, sr, err := synth.LoadWav(inputFile, true)
+		wave, sr, err := playsample.LoadWav(inputFile, true)
 		if err != nil {
 			log.Fatalf("Failed to load %s: %v", inputFile, err)
 		}
@@ -87,7 +88,7 @@ func main() {
 
 	// Apply a quick fade-out to the end of the combined samples
 	fadeDuration := 0.01 // Fade-out duration in seconds (10 milliseconds)
-	combined = synth.ApplyFadeOut(combined, fadeDuration, sampleRate, synth.QuadraticFade)
+	combined = synth.ApplyQuadraticFadeOut(combined, fadeDuration, sampleRate)
 
 	// Open the output file for writing
 	outFile, err := os.Create(*outputFile)
@@ -98,7 +99,7 @@ func main() {
 
 	// Save the final combined result to the output file using an io.WriteSeeker
 	const channels = 1
-	if err := synth.SaveToWav(outFile, combined, sampleRate, bitDepth, channels); err != nil {
+	if err := playsample.SaveToWav(outFile, combined, sampleRate, bitDepth, channels); err != nil {
 		log.Fatalf("Failed to save %s: %v", *outputFile, err)
 	}
 

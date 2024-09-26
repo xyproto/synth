@@ -1,5 +1,3 @@
-//go:build !sdl2
-
 package synth
 
 import (
@@ -7,54 +5,43 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/xyproto/files"
+	"github.com/xyproto/playsample"
 )
 
-// Player represents a struct with methods for playing audio
-type Player struct {
-	Initialized bool
-}
+var player = playsample.NewPlayer()
 
-// NewPlayer checks if ffplay exists in the PATH and returns a new Player struct
-func NewPlayer() *Player {
-	return &Player{Initialized: files.PathHas("ffplay")}
-}
-
-// Close sets the Player as uninitialized
-func (player *Player) Close() {
-	player.Initialized = false
-}
-
-// GeneratePlay generates a waveform of the given type and then plays it
-func (player *Player) GeneratePlay(t string, cfg *Settings) error {
+// GeneratePlay generates and plays the current kick drum sound
+func GeneratePlay(t string, cfg *Settings) error {
 	if !player.Initialized {
-		return errors.New("ffplay culd not be found")
+		return errors.New("A Player needs to be initialized first")
 	}
-	return FFGeneratePlay(t, cfg)
+	samples, err := cfg.Generate(t)
+	if err != nil {
+		return err
+	}
+	return player.PlayWaveform(samples, cfg.SampleRate, cfg.BitDepth, cfg.Channels)
 }
 
-// PlayWav plays a WAV file using SDL2 and SDL_mixer
-func (player *Player) PlayWav(filePath string) error {
-	if !player.Initialized {
-		return errors.New("ffplay culd not be found")
+// FFGeneratePlay generates a waveform of the given type, saves it to a temporary WAV file,
+// plays it using ffplay, and then deletes the temporary file.
+func FFGeneratePlay(t string, cfg *Settings) error {
+	// Generate the kick drum waveform
+	samples, err := cfg.Generate(t)
+	if err != nil {
+		return fmt.Errorf("error generating kick waveform: %v", err)
 	}
-	return FFPlayWav(filePath)
-}
-
-// PlayWaveform plays raw waveform samples using SDL2
-func (player *Player) PlayWaveform(samples []float64, sampleRate, bitDepth, channels int) error {
-	if !player.Initialized {
-		return errors.New("ffplay culd not be found")
-	}
-	tmpFile, err := os.CreateTemp("", "waveform_*.wav")
+	// Create a temporary WAV file
+	tmpFile, err := os.CreateTemp("", "kickdrum_*.wav")
 	if err != nil {
 		return fmt.Errorf("error creating temporary wav file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
-	if err := SaveToWav(tmpFile, samples, sampleRate, bitDepth, channels); err != nil {
+	defer os.Remove(tmpFile.Name()) // Ensure the file is removed after playing
+	// Save the waveform to the temporary file using SaveToWav
+	if err := playsample.SaveToWav(tmpFile, samples, cfg.SampleRate, cfg.BitDepth, cfg.Channels); err != nil {
 		return fmt.Errorf("error saving wav file: %v", err)
 	}
-	err = FFPlayWavWithSampleRate(tmpFile.Name(), sampleRate)
+	// Play the temporary wav file using ffplay
+	err = playsample.FFPlayWav(tmpFile.Name())
 	if err != nil {
 		return fmt.Errorf("error playing wav file: %v", err)
 	}

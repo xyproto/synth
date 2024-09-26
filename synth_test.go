@@ -4,6 +4,8 @@ import (
 	"math"
 	"os"
 	"testing"
+
+	"github.com/xyproto/playsample"
 )
 
 func createTestWaveform(value float64, numSamples int) []float64 {
@@ -189,12 +191,12 @@ func TestSaveAndLoadWav(t *testing.T) {
 	}
 	defer file.Close()
 
-	err = SaveToWav(file, samples, 44100, 16, 1)
+	err = playsample.SaveToWav(file, samples, 44100, 16, 1)
 	if err != nil {
 		t.Fatalf("Failed to save WAV file: %v", err)
 	}
 
-	_, sampleRate, err := LoadWav(filename, false)
+	_, sampleRate, err := playsample.LoadWav(filename, false)
 	if err != nil {
 		t.Fatalf("Failed to load WAV file: %v", err)
 	}
@@ -252,13 +254,13 @@ func TestWavSaveAndLoad(t *testing.T) {
 	defer file.Close()
 
 	// Save the waveform to a WAV file
-	err = SaveToWav(file, samples, 44100, 16, 1)
+	err = playsample.SaveToWav(file, samples, 44100, 16, 1)
 	if err != nil {
 		t.Fatalf("Failed to save WAV file: %v", err)
 	}
 
 	// Load the waveform back from the WAV file
-	loadedSamples, sampleRate, err := LoadWav(filename, false)
+	loadedSamples, sampleRate, err := playsample.LoadWav(filename, false)
 	if err != nil {
 		t.Fatalf("Failed to load WAV file: %v", err)
 	}
@@ -360,7 +362,7 @@ func TestSaveToWavEmptySamples(t *testing.T) {
 	}
 	defer file.Close()
 
-	err = SaveToWav(file, samples, 44100, 16, 1)
+	err = playsample.SaveToWav(file, samples, 44100, 16, 1)
 	if err == nil {
 		t.Fatalf("Expected error when saving zero-length waveform, but got nil")
 	}
@@ -379,7 +381,7 @@ func TestSaveToWavNonEmptySamples(t *testing.T) {
 	}
 	defer file.Close()
 
-	err = SaveToWav(file, samples, 44100, 16, 1)
+	err = playsample.SaveToWav(file, samples, 44100, 16, 1)
 	if err != nil {
 		t.Fatalf("Failed to save non-zero length waveform: %v", err)
 	}

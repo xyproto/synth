@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/xyproto/playsample"
 	"github.com/xyproto/synth"
 )
 
@@ -89,7 +90,7 @@ func main() {
 	}
 	defer outFile.Close()
 
-	if err := synth.SaveToWav(outFile, limited, sampleRate, bitDepth, channels); err != nil {
+	if err := playsample.SaveToWav(outFile, limited, sampleRate, bitDepth, channels); err != nil {
 		fmt.Printf("Error saving WAV file: %v\n", err)
 		return
 	}
@@ -99,7 +100,7 @@ func main() {
 	// Play the sound if -p flag is provided
 	if playSound {
 		fmt.Println("Playing the generated sound...")
-		player := synth.NewPlayer()
+		player := playsample.NewPlayer()
 		defer player.Close()
 		if err := player.PlayWaveform(limited, sampleRate, bitDepth, channels); err != nil {
 			fmt.Printf("Error playing sound: %v\n", err)

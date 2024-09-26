@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/xyproto/playsample"
 	"github.com/xyproto/synth"
 )
 
@@ -144,7 +145,7 @@ func main() {
 	defer outFile.Close()
 
 	// Save the waveform to the output file
-	if err := synth.SaveToWav(outFile, samples, sampleRate, *bitDepth, *channels); err != nil {
+	if err := playsample.SaveToWav(outFile, samples, sampleRate, *bitDepth, *channels); err != nil {
 		fmt.Println("Failed to save kick to file:", err)
 		return
 	}
@@ -155,7 +156,7 @@ func main() {
 	if *playKick {
 		fmt.Println("Playing the generated kick drum sound...")
 		// Use PlayWaveform to play the samples directly
-		player := synth.NewPlayer()
+		player := playsample.NewPlayer()
 		defer player.Close()
 		if err := player.PlayWaveform(samples, sampleRate, *bitDepth, *channels); err != nil {
 			fmt.Println("Failed to play kick:", err)
