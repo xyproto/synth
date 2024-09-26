@@ -78,25 +78,25 @@ func main() {
 	var err error
 	switch {
 	case *kick606:
-		cfg, err = synth.New606(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+		cfg, err = synth.New606Kick(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating 606 kick with a punchy, shorter sound.")
 	case *kick707:
-		cfg, err = synth.New707(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+		cfg, err = synth.New707Kick(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating 707 kick with a classic, shorter punchy sound.")
 	case *kick808:
-		cfg, err = synth.New808(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+		cfg, err = synth.New808Kick(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating 808 kick with deep sub-bass and smooth characteristics.")
 	case *kick909:
-		cfg, err = synth.New909(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+		cfg, err = synth.New909Kick(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating 909 kick with punchy, mid-range presence and quick decay.")
 	case *kickLinnDrum:
-		cfg, err = synth.NewLinnDrum(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+		cfg, err = synth.NewLinnDrumKick(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating LinnDrum kick with an iconic, punchy sound.")
 	case *kickDeepHouse:
-		cfg, err = synth.NewDeepHouse(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+		cfg, err = synth.NewDeepHouseKick(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating Deep House kick with smooth, warm bass.")
 	case *kickExperimental:
-		cfg, err = synth.NewExperimental(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+		cfg, err = synth.NewExperimentalKick(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating experimental-style kick with unique texture.")
 	default:
 		cfg, err = synth.NewSettings(nil, 150.0, 40.0, *length/1000.0, sampleRate, *bitDepth, *channels)
@@ -162,6 +162,7 @@ func main() {
 			fmt.Println("Failed to play kick:", err)
 			return
 		}
+		//time.Sleep(time.Duration(int64(*length * 1e6)))
 	}
 }
 

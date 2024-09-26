@@ -32,7 +32,7 @@ func main() {
 	flag.IntVar(&bitDepth, "bitdepth", 16, "Bit depth of the audio (16 or 24)")
 	flag.IntVar(&channels, "channels", 1, "Channels (1 or 2)")
 
-	flag.DurationVar(&duration, "duration", 10*time.Second, "Duration of the audio (e.g., 10s, 5m)")
+	flag.DurationVar(&duration, "duration", 5*time.Second, "Duration of the audio (e.g., 10s, 5m)")
 	flag.Float64Var(&baseFreq, "freq", 55.0, "Base frequency for the bass sound (in Hz)")
 
 	flag.Parse()
@@ -106,5 +106,6 @@ func main() {
 			fmt.Printf("Error playing sound: %v\n", err)
 			return
 		}
+		//time.Sleep(duration)
 	}
 }
