@@ -34,18 +34,6 @@ func (player *Player) Close() {
 	player.Initialized = false
 }
 
-// PlayKick generates and plays the current kick drum sound
-func (player *Player) GeneratePlay(t string, cfg *Settings) error {
-	if !player.Initialized {
-		return errors.New("SDL2 Audio needs to be initialized first")
-	}
-	samples, err := cfg.Generate(t)
-	if err != nil {
-		return err
-	}
-	return player.PlayWaveform(samples, cfg.SampleRate, cfg.BitDepth, cfg.Channels)
-}
-
 // PlayWav plays a WAV file using SDL2 and SDL_mixer
 func (player *Player) PlayWav(filePath string) error {
 	if !player.Initialized {

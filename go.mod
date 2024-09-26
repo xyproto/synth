@@ -4,7 +4,7 @@ go 1.23.1
 
 require (
 	github.com/xyproto/audioeffects v0.11.1
-	github.com/xyproto/playsample v0.0.2
+	github.com/xyproto/playsample v0.1.0
 )
 
 require (
