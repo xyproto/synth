@@ -23,7 +23,6 @@ func main() {
 	kickExperimental := flag.Bool("experimental", false, "Generate a kick.wav with experimental-style characteristics")
 
 	// Sound customization flags
-	noiseType := flag.String("noise", "none", "Type of noise to mix in (none, white, pink, brown)")
 	noiseAmount := flag.Float64("noiseamount", 0.0, "Amount of noise to mix in (0.0 to 1.0)")
 	length := flag.Float64("length", 1000, "Length of the kick drum sample in milliseconds")
 	quality := flag.Int("quality", 96, "Sample rate in kHz (44, 48, 96, or 192)")
@@ -124,22 +123,6 @@ func main() {
 	cfg.FilterBands = parseCommaSeparatedFloats(*filterBands)
 	cfg.FadeDuration = *release // Match fade duration to release time
 	cfg.SmoothFrequencyTransitions = true
-
-	var noise int
-	switch strings.ToLower(*noiseType) {
-	case "white":
-		noise = synth.NoiseWhite
-	case "pink":
-		noise = synth.NoisePink
-	case "brown":
-		noise = synth.NoiseBrown
-	case "none":
-		noise = synth.NoiseNone
-	default:
-		fmt.Println("Invalid noise type. Choose from: none, white, pink, brown.")
-		os.Exit(1)
-	}
-	cfg.NoiseType = noise
 	cfg.NoiseAmount = *noiseAmount
 
 	// Generate the kick drum waveform
@@ -150,7 +133,7 @@ func main() {
 	}
 
 	// Apply a fade-out at the end to prevent crackling noise
-	samples = synth.ApplyFadeOut(samples, cfg.Release, sampleRate, synth.QuadraticFade)
+	samples = synth.ApplyQuadraticFadeOut(samples, cfg.Release, sampleRate)
 
 	// Open the output file for writing
 	outFile, err := os.Create(*outputFile)
