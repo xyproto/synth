@@ -414,3 +414,23 @@ func LogarithmicFade(t float64) float64 {
 func SineFade(t float64) float64 {
 	return math.Sin((t * math.Pi) / 2)
 }
+
+func Resample(waveform []float64, originalSampleRate, targetSampleRate int) []float64 {
+	if originalSampleRate == targetSampleRate {
+		return waveform
+	}
+	resampleFactor := float64(targetSampleRate) / float64(originalSampleRate)
+	newLength := int(float64(len(waveform)) * resampleFactor)
+	resampledWaveform := make([]float64, newLength)
+	for i := 0; i < newLength; i++ {
+		oldPos := float64(i) / resampleFactor
+		index1 := int(oldPos)
+		index2 := index1 + 1
+		if index2 >= len(waveform) {
+			index2 = len(waveform) - 1
+		}
+		weight := oldPos - float64(index1)
+		resampledWaveform[i] = (1-weight)*waveform[index1] + weight*waveform[index2]
+	}
+	return resampledWaveform
+}
