@@ -57,43 +57,218 @@ func NewSettings(output io.WriteSeeker, startFreq, endFreq, duration float64, sa
 	}, nil
 }
 
-// NewRandom generates random settings for the given sound type
+// NewRandom generates random settings for the given sound type.
+// It handles each SoundType by initializing a Settings instance with randomized parameters suitable for that sound.
 func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth, channels int) *Settings {
 	switch soundType {
 	case Kick:
 		cfg, _ := NewSettings(output, 50.0, 30.0, 1.0, sampleRate, bitDepth, channels)
-		cfg.Attack = rand.Float64() * 0.02
-		cfg.Decay = 0.1 + rand.Float64()*0.5
-		cfg.Sustain = rand.Float64() * 0.5
-		cfg.Release = 0.1 + rand.Float64()*0.5
-		cfg.Drive = rand.Float64()
-		cfg.FilterCutoff = 2000 + rand.Float64()*6000
-		cfg.FilterResonance = 1.0 + rand.Float64()*1.0
-		cfg.Sweep = rand.Float64() * 1.5
-		cfg.PitchDecay = rand.Float64() * 1.5
-		cfg.FadeDuration = rand.Float64() * 0.1
+		cfg.Attack = rand.Float64()*0.02 + 0.001       // 0.001 to 0.021 seconds
+		cfg.Decay = rand.Float64()*0.5 + 0.1           // 0.1 to 0.6 seconds
+		cfg.Sustain = rand.Float64() * 0.5             // 0.0 to 0.5
+		cfg.Release = rand.Float64()*0.5 + 0.1         // 0.1 to 0.6 seconds
+		cfg.Drive = rand.Float64() * 0.7               // 0.0 to 0.7
+		cfg.FilterCutoff = 1500 + rand.Float64()*5000  // 1500 to 6500 Hz
+		cfg.FilterResonance = 0.5 + rand.Float64()*1.5 // 0.5 to 2.0
+		cfg.Sweep = rand.Float64() * 1.5               // 0.0 to 1.5
+		cfg.PitchDecay = rand.Float64() * 1.5          // 0.0 to 1.5
+		cfg.FadeDuration = rand.Float64() * 0.1        // 0.0 to 0.1 seconds
 		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.1
-		if rand.Float64() < 0.1 {
+		if rand.Float64() < 0.2 { // 20% chance to use varied waveforms
 			cfg.WaveformType = rand.Intn(7)
 		} else {
-			cfg.WaveformType = rand.Intn(2)
+			cfg.WaveformType = rand.Intn(2) // Sine or Triangle
 		}
 		return cfg
-	default:
-		fallthrough
+	case Clap:
+		cfg, _ := NewSettings(output, 300.0, 200.0, 0.3, sampleRate, bitDepth, channels)
+		cfg.NoiseAmount = rand.Float64()*0.5 + 0.5     // 0.5 to 1.0
+		cfg.Attack = rand.Float64()*0.01 + 0.001       // 0.001 to 0.011 seconds
+		cfg.Decay = rand.Float64()*0.2 + 0.05          // 0.05 to 0.25 seconds
+		cfg.Sustain = rand.Float64() * 0.3             // 0.0 to 0.3
+		cfg.Release = rand.Float64()*0.2 + 0.05        // 0.05 to 0.25 seconds
+		cfg.Drive = rand.Float64() * 0.5               // 0.0 to 0.5
+		cfg.FilterCutoff = 4000 + rand.Float64()*3000  // 4000 to 7000 Hz
+		cfg.FilterResonance = 0.8 + rand.Float64()*1.2 // 0.8 to 2.0
+		cfg.Sweep = rand.Float64() * 1.2               // 0.0 to 1.2
+		cfg.PitchDecay = rand.Float64() * 1.2          // 0.0 to 1.2
+		cfg.FadeDuration = rand.Float64() * 0.05       // 0.0 to 0.05 seconds
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.2
+		cfg.WaveformType = rand.Intn(4) // Sine, Triangle, Sawtooth, Square
+		return cfg
 	case Snare:
-		cfg, _ := NewSettings(output, 300.0, 100.0, 0.5, sampleRate, bitDepth, channels)
-		cfg.NoiseAmount = 0.5 + rand.Float64()*0.5
-		cfg.Attack = rand.Float64() * 0.01
-		cfg.Decay = 0.05 + rand.Float64()*0.2
-		cfg.Sustain = 0.0
-		cfg.Release = 0.05 + rand.Float64()*0.2
-		cfg.Drive = rand.Float64()
-		cfg.FilterCutoff = 5000 + rand.Float64()*3000
-		cfg.FilterResonance = 1.0 + rand.Float64()*1.0
-		cfg.FadeDuration = rand.Float64() * 0.05
+		cfg, _ := NewSettings(output, 300.0, 150.0, 0.5, sampleRate, bitDepth, channels)
+		cfg.NoiseAmount = 0.5 + rand.Float64()*0.5     // 0.5 to 1.0
+		cfg.Attack = rand.Float64() * 0.01             // 0.0 to 0.01 seconds
+		cfg.Decay = 0.05 + rand.Float64()*0.2          // 0.05 to 0.25 seconds
+		cfg.Sustain = 0.0                              // No sustain for snare
+		cfg.Release = 0.05 + rand.Float64()*0.2        // 0.05 to 0.25 seconds
+		cfg.Drive = rand.Float64() * 0.7               // 0.0 to 0.7
+		cfg.FilterCutoff = 5000 + rand.Float64()*3000  // 5000 to 8000 Hz
+		cfg.FilterResonance = 1.0 + rand.Float64()*1.0 // 1.0 to 2.0
+		cfg.FadeDuration = rand.Float64() * 0.05       // 0.0 to 0.05 seconds
 		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.1
-		cfg.WaveformType = rand.Intn(4)
+		cfg.WaveformType = rand.Intn(4) // Sine, Triangle, Sawtooth, Square
+		return cfg
+	case ClosedHH:
+		cfg, _ := NewSettings(output, 8000.0, 5000.0, 0.1, sampleRate, bitDepth, channels)
+		cfg.NoiseAmount = 0.3 + rand.Float64()*0.4     // 0.3 to 0.7
+		cfg.Attack = rand.Float64() * 0.005            // 0.0 to 0.005 seconds
+		cfg.Decay = 0.05 + rand.Float64()*0.15         // 0.05 to 0.2 seconds
+		cfg.Sustain = 0.0                              // No sustain for percussive sounds
+		cfg.Release = 0.05 + rand.Float64()*0.15       // 0.05 to 0.2 seconds
+		cfg.Drive = rand.Float64() * 0.5               // 0.0 to 0.5
+		cfg.FilterCutoff = 6000 + rand.Float64()*4000  // 6000 to 10000 Hz
+		cfg.FilterResonance = 0.5 + rand.Float64()*1.5 // 0.5 to 2.0
+		cfg.FadeDuration = rand.Float64() * 0.02       // 0.0 to 0.02 seconds
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.15
+		cfg.WaveformType = rand.Intn(4) // Sine, Triangle, Sawtooth, Square
+		return cfg
+	case OpenHH:
+		cfg, _ := NewSettings(output, 10000.0, 7000.0, 0.3, sampleRate, bitDepth, channels)
+		cfg.NoiseAmount = 0.4 + rand.Float64()*0.4     // 0.4 to 0.8
+		cfg.Attack = rand.Float64() * 0.01             // 0.0 to 0.01 seconds
+		cfg.Decay = 0.1 + rand.Float64()*0.2           // 0.1 to 0.3 seconds
+		cfg.Sustain = 0.0                              // No sustain
+		cfg.Release = 0.1 + rand.Float64()*0.2         // 0.1 to 0.3 seconds
+		cfg.Drive = rand.Float64() * 0.6               // 0.0 to 0.6
+		cfg.FilterCutoff = 7000 + rand.Float64()*3000  // 7000 to 10000 Hz
+		cfg.FilterResonance = 1.0 + rand.Float64()*1.0 // 1.0 to 2.0
+		cfg.FadeDuration = rand.Float64() * 0.03       // 0.0 to 0.03 seconds
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.1
+		cfg.WaveformType = rand.Intn(4) // Sine, Triangle, Sawtooth, Square
+		return cfg
+	case Rimshot:
+		cfg, _ := NewSettings(output, 4000.0, 2000.0, 0.2, sampleRate, bitDepth, channels)
+		cfg.NoiseAmount = 0.6 + rand.Float64()*0.4     // 0.6 to 1.0
+		cfg.Attack = rand.Float64() * 0.005            // 0.0 to 0.005 seconds
+		cfg.Decay = 0.05 + rand.Float64()*0.15         // 0.05 to 0.2 seconds
+		cfg.Sustain = 0.0                              // No sustain
+		cfg.Release = 0.05 + rand.Float64()*0.15       // 0.05 to 0.2 seconds
+		cfg.Drive = rand.Float64() * 0.6               // 0.0 to 0.6
+		cfg.FilterCutoff = 8000 + rand.Float64()*2000  // 8000 to 10000 Hz
+		cfg.FilterResonance = 1.0 + rand.Float64()*1.0 // 1.0 to 2.0
+		cfg.FadeDuration = rand.Float64() * 0.02       // 0.0 to 0.02 seconds
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.1
+		cfg.WaveformType = rand.Intn(4) // Sine, Triangle, Sawtooth, Square
+		return cfg
+	case Tom:
+		cfg, _ := NewSettings(output, 200.0, 100.0, 0.4, sampleRate, bitDepth, channels)
+		cfg.Attack = rand.Float64()*0.01 + 0.001       // 0.001 to 0.011 seconds
+		cfg.Decay = 0.1 + rand.Float64()*0.3           // 0.1 to 0.4 seconds
+		cfg.Sustain = 0.0                              // No sustain
+		cfg.Release = 0.1 + rand.Float64()*0.3         // 0.1 to 0.4 seconds
+		cfg.Drive = rand.Float64() * 0.5               // 0.0 to 0.5
+		cfg.FilterCutoff = 3000 + rand.Float64()*2000  // 3000 to 5000 Hz
+		cfg.FilterResonance = 0.8 + rand.Float64()*1.2 // 0.8 to 2.0
+		cfg.FadeDuration = rand.Float64() * 0.025      // 0.0 to 0.025 seconds
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.15
+		cfg.WaveformType = rand.Intn(4) // Sine, Triangle, Sawtooth, Square
+		return cfg
+	case Percussion:
+		cfg, _ := NewSettings(output, 1000.0, 500.0, 0.2, sampleRate, bitDepth, channels)
+		cfg.NoiseAmount = 0.4 + rand.Float64()*0.4     // 0.4 to 0.8
+		cfg.Attack = rand.Float64() * 0.005            // 0.0 to 0.005 seconds
+		cfg.Decay = 0.05 + rand.Float64()*0.15         // 0.05 to 0.2 seconds
+		cfg.Sustain = 0.0                              // No sustain
+		cfg.Release = 0.05 + rand.Float64()*0.15       // 0.05 to 0.2 seconds
+		cfg.Drive = rand.Float64() * 0.5               // 0.0 to 0.5
+		cfg.FilterCutoff = 6000 + rand.Float64()*3000  // 6000 to 9000 Hz
+		cfg.FilterResonance = 1.0 + rand.Float64()*1.0 // 1.0 to 2.0
+		cfg.FadeDuration = rand.Float64() * 0.03       // 0.0 to 0.03 seconds
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.1
+		cfg.WaveformType = rand.Intn(4) // Sine, Triangle, Sawtooth, Square
+		return cfg
+	case Ride:
+		cfg, _ := NewSettings(output, 12000.0, 7000.0, 0.4, sampleRate, bitDepth, channels)
+		cfg.NoiseAmount = 0.5 + rand.Float64()*0.5     // 0.5 to 1.0
+		cfg.Attack = rand.Float64() * 0.01             // 0.0 to 0.01 seconds
+		cfg.Decay = 0.1 + rand.Float64()*0.3           // 0.1 to 0.4 seconds
+		cfg.Sustain = 0.2 + rand.Float64()*0.3         // 0.2 to 0.5
+		cfg.Release = 0.1 + rand.Float64()*0.3         // 0.1 to 0.4 seconds
+		cfg.Drive = rand.Float64() * 0.6               // 0.0 to 0.6
+		cfg.FilterCutoff = 8000 + rand.Float64()*4000  // 8000 to 12000 Hz
+		cfg.FilterResonance = 1.0 + rand.Float64()*1.0 // 1.0 to 2.0
+		cfg.FadeDuration = rand.Float64() * 0.03       // 0.0 to 0.03 seconds
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.15
+		cfg.WaveformType = rand.Intn(4) // Sine, Triangle, Sawtooth, Square
+		return cfg
+	case Crash:
+		cfg, _ := NewSettings(output, 15000.0, 10000.0, 0.3, sampleRate, bitDepth, channels)
+		cfg.NoiseAmount = 0.6 + rand.Float64()*0.4     // 0.6 to 1.0
+		cfg.Attack = rand.Float64() * 0.005            // 0.0 to 0.005 seconds
+		cfg.Decay = 0.1 + rand.Float64()*0.25          // 0.1 to 0.35 seconds
+		cfg.Sustain = 0.3 + rand.Float64()*0.4         // 0.3 to 0.7
+		cfg.Release = 0.1 + rand.Float64()*0.3         // 0.1 to 0.4 seconds
+		cfg.Drive = rand.Float64() * 0.7               // 0.0 to 0.7
+		cfg.FilterCutoff = 10000 + rand.Float64()*5000 // 10000 to 15000 Hz
+		cfg.FilterResonance = 1.2 + rand.Float64()*1.0 // 1.2 to 2.2
+		cfg.FadeDuration = rand.Float64() * 0.04       // 0.0 to 0.04 seconds
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.2
+		cfg.WaveformType = rand.Intn(4) // Sine, Triangle, Sawtooth, Square
+		return cfg
+	case Bass:
+		cfg, _ := NewSettings(output, 60.0, 30.0, 1.0, sampleRate, bitDepth, channels)
+		cfg.Attack = rand.Float64()*0.01 + 0.001       // 0.001 to 0.011 seconds
+		cfg.Decay = 0.1 + rand.Float64()*0.4           // 0.1 to 0.5 seconds
+		cfg.Sustain = rand.Float64() * 0.5             // 0.0 to 0.5
+		cfg.Release = 0.1 + rand.Float64()*0.4         // 0.1 to 0.5 seconds
+		cfg.Drive = rand.Float64() * 0.7               // 0.0 to 0.7
+		cfg.FilterCutoff = 150.0 + rand.Float64()*500  // 150.0 to 650.0 Hz
+		cfg.FilterResonance = 0.5 + rand.Float64()*1.5 // 0.5 to 2.0
+		cfg.Sweep = rand.Float64() * 1.0               // 0.0 to 1.0
+		cfg.PitchDecay = rand.Float64() * 1.0          // 0.0 to 1.0
+		cfg.FadeDuration = rand.Float64() * 0.05       // 0.0 to 0.05 seconds
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.2
+		if rand.Float64() < 0.3 { // 30% chance to use varied waveforms
+			cfg.WaveformType = rand.Intn(7)
+		} else {
+			cfg.WaveformType = rand.Intn(2) // Sine or Triangle
+		}
+		return cfg
+	case Xylophone:
+		cfg, _ := NewSettings(output, 1000.0, 500.0, 0.2, sampleRate, bitDepth, channels)
+		cfg.Attack = rand.Float64()*0.005 + 0.001      // 0.001 to 0.006 seconds
+		cfg.Decay = 0.05 + rand.Float64()*0.15         // 0.05 to 0.2 seconds
+		cfg.Sustain = 0.0                              // No sustain
+		cfg.Release = 0.05 + rand.Float64()*0.15       // 0.05 to 0.2 seconds
+		cfg.Drive = rand.Float64() * 0.5               // 0.0 to 0.5
+		cfg.FilterCutoff = 8000 + rand.Float64()*2000  // 8000 to 10000 Hz
+		cfg.FilterResonance = 1.0 + rand.Float64()*1.0 // 1.0 to 2.0
+		cfg.FadeDuration = rand.Float64() * 0.02       // 0.0 to 0.02 seconds
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.1
+		cfg.WaveformType = rand.Intn(4) // Sine, Triangle, Sawtooth, Square
+		return cfg
+	case Lead:
+		cfg, _ := NewSettings(output, 880.0, 440.0, 0.5, sampleRate, bitDepth, channels)
+		cfg.Attack = rand.Float64()*0.02 + 0.005       // 0.005 to 0.025 seconds
+		cfg.Decay = 0.2 + rand.Float64()*0.5           // 0.2 to 0.7 seconds
+		cfg.Sustain = 0.3 + rand.Float64()*0.7         // 0.3 to 1.0
+		cfg.Release = 0.2 + rand.Float64()*0.5         // 0.2 to 0.7 seconds
+		cfg.Drive = rand.Float64() * 0.8               // 0.0 to 0.8
+		cfg.FilterCutoff = 5000 + rand.Float64()*5000  // 5000 to 10000 Hz
+		cfg.FilterResonance = 0.7 + rand.Float64()*1.3 // 0.7 to 2.0
+		cfg.Sweep = rand.Float64() * 2.0               // 0.0 to 2.0
+		cfg.PitchDecay = rand.Float64() * 2.0          // 0.0 to 2.0
+		cfg.FadeDuration = rand.Float64() * 0.05       // 0.0 to 0.05 seconds
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.2
+		cfg.WaveformType = rand.Intn(4) // Sine, Triangle, Sawtooth, Square
+		return cfg
+	default:
+		// Handle unknown SoundType by returning a default Settings with randomized parameters
+		cfg, _ := NewSettings(output, 500.0, 250.0, 0.5, sampleRate, bitDepth, channels)
+		cfg.Attack = rand.Float64()*0.02 + 0.001       // 0.001 to 0.021 seconds
+		cfg.Decay = rand.Float64()*0.3 + 0.1           // 0.1 to 0.4 seconds
+		cfg.Sustain = rand.Float64() * 0.5             // 0.0 to 0.5
+		cfg.Release = rand.Float64()*0.3 + 0.1         // 0.1 to 0.4 seconds
+		cfg.Drive = rand.Float64() * 0.6               // 0.0 to 0.6
+		cfg.FilterCutoff = 3000 + rand.Float64()*7000  // 3000 to 10000 Hz
+		cfg.FilterResonance = 1.0 + rand.Float64()*1.0 // 1.0 to 2.0
+		cfg.Sweep = rand.Float64() * 1.5               // 0.0 to 1.5
+		cfg.PitchDecay = rand.Float64() * 1.5          // 0.0 to 1.5
+		cfg.FadeDuration = rand.Float64() * 0.05       // 0.0 to 0.05 seconds
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.1
+		cfg.WaveformType = rand.Intn(4) // Sine, Triangle, Sawtooth, Square
 		return cfg
 	}
 }
