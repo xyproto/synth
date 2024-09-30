@@ -369,37 +369,37 @@ func (cfg *Settings) GenerateSweepWaveform() ([]float64, error) {
 	return samples, nil
 }
 
-// Generate is a wrapper function that calls the appropriate Generate* function based on the input string t
-func (cfg *Settings) Generate(t string) ([]float64, error) {
-	switch t {
-	case "kick":
+// Generate is a wrapper function that calls the appropriate Generate* function based on the given sound type
+func (cfg *Settings) Generate(soundType SoundType) ([]float64, error) {
+	switch soundType {
+	case Kick:
 		return cfg.GenerateKick()
-	case "clap":
+	case Clap:
 		return cfg.GenerateClap()
-	case "snare":
+	case Snare:
 		return cfg.GenerateSnare()
-	case "closed_hh":
+	case ClosedHH:
 		return cfg.GenerateClosedHH()
-	case "open_hh":
+	case OpenHH:
 		return cfg.GenerateOpenHH()
-	case "rimshot":
+	case Rimshot:
 		return cfg.GenerateRimshot()
-	case "tom":
+	case Tom:
 		return cfg.GenerateTom()
-	case "percussion":
+	case Percussion:
 		return cfg.GeneratePercussion()
-	case "ride":
+	case Ride:
 		return cfg.GenerateRide()
-	case "crash":
+	case Crash:
 		return cfg.GenerateCrash()
-	case "bass":
+	case Bass:
 		return cfg.GenerateBass()
-	case "xylophone":
+	case Xylophone:
 		return cfg.GenerateXylophone()
-	case "lead":
+	case Lead:
 		return cfg.GenerateLead()
 	default:
-		return nil, fmt.Errorf("unknown sound type: %s", t)
+		return nil, fmt.Errorf("unknown sound type: %d", soundType)
 	}
 }
 

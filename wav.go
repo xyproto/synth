@@ -8,13 +8,46 @@ import (
 	"github.com/xyproto/playsample"
 )
 
+func (soundType SoundType) String() string {
+	switch soundType {
+	case Kick:
+		return "kick"
+	case Clap:
+		return "clap"
+	case Snare:
+		return "snare"
+	case ClosedHH:
+		return "closedHH"
+	case OpenHH:
+		return "openHH"
+	case Rimshot:
+		return "rimshot"
+	case Tom:
+		return "tom"
+	case Percussion:
+		return "percussion"
+	case Ride:
+		return "ride"
+	case Crash:
+		return "crash"
+	case Bass:
+		return "bass"
+	case Xylophone:
+		return "xylophone"
+	case Lead:
+		return "lead"
+	default:
+		return "unknown"
+	}
+}
+
 // GenerateAndSaveTo generates samples for a given type (e.g., "kick", "snare") and saves it to a specified directory, avoiding filename collisions.
-func (cfg *Settings) GenerateAndSaveTo(t, directory string) (string, error) {
+func (cfg *Settings) GenerateAndSaveTo(soundType SoundType, directory string) (string, error) {
 	n := 1
 	var fileName string
 	for {
 		// Construct the file path with an incrementing number based on the type
-		fileName = filepath.Join(directory, fmt.Sprintf("%s%d.wav", t, n))
+		fileName = filepath.Join(directory, fmt.Sprintf("%s%d.wav", soundType, n))
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
 			break
 		}
@@ -29,7 +62,7 @@ func (cfg *Settings) GenerateAndSaveTo(t, directory string) (string, error) {
 	// Set the file as the output for the sound generation
 	cfg.Output = file
 	// Generate the samples for the requested type
-	samples, err := cfg.Generate(t)
+	samples, err := cfg.Generate(soundType)
 	if err != nil {
 		return "", err
 	}

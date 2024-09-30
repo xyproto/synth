@@ -6,6 +6,24 @@ import (
 	"math/rand"
 )
 
+type SoundType int
+
+const ( // SoundType
+	Kick = iota
+	Clap
+	Snare
+	ClosedHH
+	OpenHH
+	Rimshot
+	Tom
+	Percussion
+	Ride
+	Crash
+	Bass
+	Xylophone
+	Lead
+)
+
 // NewSettings creates a new Settings instance with default values for a percussive sound
 func NewSettings(output io.WriteSeeker, startFreq, endFreq, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
 	if sampleRate <= 0 || duration <= 0 || channels <= 0 {
@@ -39,26 +57,45 @@ func NewSettings(output io.WriteSeeker, startFreq, endFreq, duration float64, sa
 	}, nil
 }
 
-// NewRandomKick generates random settings for experimental kick drum sounds
-func NewRandomKick(output io.WriteSeeker, sampleRate, bitDepth, channels int) *Settings {
-	cfg, _ := NewSettings(output, 50.0, 30.0, 1.0, sampleRate, bitDepth, channels)
-	cfg.Attack = rand.Float64() * 0.02
-	cfg.Decay = 0.1 + rand.Float64()*0.5
-	cfg.Sustain = rand.Float64() * 0.5
-	cfg.Release = 0.1 + rand.Float64()*0.5
-	cfg.Drive = rand.Float64()
-	cfg.FilterCutoff = 2000 + rand.Float64()*6000
-	cfg.FilterResonance = 1.0 + rand.Float64()*1.0
-	cfg.Sweep = rand.Float64() * 1.5
-	cfg.PitchDecay = rand.Float64() * 1.5
-	cfg.FadeDuration = rand.Float64() * 0.1
-	cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.1
-	if rand.Float64() < 0.1 {
-		cfg.WaveformType = rand.Intn(7)
-	} else {
-		cfg.WaveformType = rand.Intn(2)
+// NewRandom generates random settings for the given sound type
+func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth, channels int) *Settings {
+	switch soundType {
+	case Kick:
+		cfg, _ := NewSettings(output, 50.0, 30.0, 1.0, sampleRate, bitDepth, channels)
+		cfg.Attack = rand.Float64() * 0.02
+		cfg.Decay = 0.1 + rand.Float64()*0.5
+		cfg.Sustain = rand.Float64() * 0.5
+		cfg.Release = 0.1 + rand.Float64()*0.5
+		cfg.Drive = rand.Float64()
+		cfg.FilterCutoff = 2000 + rand.Float64()*6000
+		cfg.FilterResonance = 1.0 + rand.Float64()*1.0
+		cfg.Sweep = rand.Float64() * 1.5
+		cfg.PitchDecay = rand.Float64() * 1.5
+		cfg.FadeDuration = rand.Float64() * 0.1
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.1
+		if rand.Float64() < 0.1 {
+			cfg.WaveformType = rand.Intn(7)
+		} else {
+			cfg.WaveformType = rand.Intn(2)
+		}
+		return cfg
+	default:
+		fallthrough
+	case Snare:
+		cfg, _ := NewSettings(output, 300.0, 100.0, 0.5, sampleRate, bitDepth, channels)
+		cfg.NoiseAmount = 0.5 + rand.Float64()*0.5
+		cfg.Attack = rand.Float64() * 0.01
+		cfg.Decay = 0.05 + rand.Float64()*0.2
+		cfg.Sustain = 0.0
+		cfg.Release = 0.05 + rand.Float64()*0.2
+		cfg.Drive = rand.Float64()
+		cfg.FilterCutoff = 5000 + rand.Float64()*3000
+		cfg.FilterResonance = 1.0 + rand.Float64()*1.0
+		cfg.FadeDuration = rand.Float64() * 0.05
+		cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.1
+		cfg.WaveformType = rand.Intn(4)
+		return cfg
 	}
-	return cfg
 }
 
 // NewSnareSettings creates a new Settings instance with predefined values optimized for snare drum sounds.
@@ -93,23 +130,6 @@ func NewSnareSettings(output io.WriteSeeker, sampleRate, bitDepth, channels int)
 		FadeDuration:               0.01,                             // Quick fade to prevent clicks
 		SmoothFrequencyTransitions: true,                             // Enable smooth transitions
 	}, nil
-}
-
-// NewRandomSnare generates random settings for experimental snare drum sounds
-func NewRandomSnare(output io.WriteSeeker, sampleRate, bitDepth, channels int) *Settings {
-	cfg, _ := NewSettings(output, 300.0, 100.0, 0.5, sampleRate, bitDepth, channels)
-	cfg.NoiseAmount = 0.5 + rand.Float64()*0.5
-	cfg.Attack = rand.Float64() * 0.01
-	cfg.Decay = 0.05 + rand.Float64()*0.2
-	cfg.Sustain = 0.0
-	cfg.Release = 0.05 + rand.Float64()*0.2
-	cfg.Drive = rand.Float64()
-	cfg.FilterCutoff = 5000 + rand.Float64()*3000
-	cfg.FilterResonance = 1.0 + rand.Float64()*1.0
-	cfg.FadeDuration = rand.Float64() * 0.05
-	cfg.SmoothFrequencyTransitions = rand.Float64() >= 0.1
-	cfg.WaveformType = rand.Intn(4)
-	return cfg
 }
 
 // New606Kick creates a 606-style kick drum
