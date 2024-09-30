@@ -30,6 +30,7 @@ func NewSettings(output io.WriteSeeker, startFreq, endFreq, duration float64, sa
 		return nil, errors.New("invalid sample rate, duration or channels")
 	}
 	return &Settings{
+		SoundType:                  Kick, // by default
 		SampleRate:                 sampleRate,
 		BitDepth:                   bitDepth, // Audio bit depth (8, 16, 24, or 32 bits)
 		Channels:                   channels,
@@ -63,6 +64,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 	switch soundType {
 	case Kick:
 		cfg, _ := NewSettings(output, 50.0, 30.0, 1.0, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.Attack = rand.Float64()*0.02 + 0.001       // 0.001 to 0.021 seconds
 		cfg.Decay = rand.Float64()*0.5 + 0.1           // 0.1 to 0.6 seconds
 		cfg.Sustain = rand.Float64() * 0.5             // 0.0 to 0.5
@@ -82,6 +84,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 		return cfg
 	case Clap:
 		cfg, _ := NewSettings(output, 300.0, 200.0, 0.3, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.NoiseAmount = rand.Float64()*0.5 + 0.5     // 0.5 to 1.0
 		cfg.Attack = rand.Float64()*0.01 + 0.001       // 0.001 to 0.011 seconds
 		cfg.Decay = rand.Float64()*0.2 + 0.05          // 0.05 to 0.25 seconds
@@ -98,6 +101,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 		return cfg
 	case Snare:
 		cfg, _ := NewSettings(output, 300.0, 150.0, 0.5, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.NoiseAmount = 0.5 + rand.Float64()*0.5     // 0.5 to 1.0
 		cfg.Attack = rand.Float64() * 0.01             // 0.0 to 0.01 seconds
 		cfg.Decay = 0.05 + rand.Float64()*0.2          // 0.05 to 0.25 seconds
@@ -112,6 +116,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 		return cfg
 	case ClosedHH:
 		cfg, _ := NewSettings(output, 8000.0, 5000.0, 0.1, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.NoiseAmount = 0.3 + rand.Float64()*0.4     // 0.3 to 0.7
 		cfg.Attack = rand.Float64() * 0.005            // 0.0 to 0.005 seconds
 		cfg.Decay = 0.05 + rand.Float64()*0.15         // 0.05 to 0.2 seconds
@@ -126,6 +131,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 		return cfg
 	case OpenHH:
 		cfg, _ := NewSettings(output, 10000.0, 7000.0, 0.3, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.NoiseAmount = 0.4 + rand.Float64()*0.4     // 0.4 to 0.8
 		cfg.Attack = rand.Float64() * 0.01             // 0.0 to 0.01 seconds
 		cfg.Decay = 0.1 + rand.Float64()*0.2           // 0.1 to 0.3 seconds
@@ -140,6 +146,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 		return cfg
 	case Rimshot:
 		cfg, _ := NewSettings(output, 4000.0, 2000.0, 0.2, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.NoiseAmount = 0.6 + rand.Float64()*0.4     // 0.6 to 1.0
 		cfg.Attack = rand.Float64() * 0.005            // 0.0 to 0.005 seconds
 		cfg.Decay = 0.05 + rand.Float64()*0.15         // 0.05 to 0.2 seconds
@@ -154,6 +161,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 		return cfg
 	case Tom:
 		cfg, _ := NewSettings(output, 200.0, 100.0, 0.4, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.Attack = rand.Float64()*0.01 + 0.001       // 0.001 to 0.011 seconds
 		cfg.Decay = 0.1 + rand.Float64()*0.3           // 0.1 to 0.4 seconds
 		cfg.Sustain = 0.0                              // No sustain
@@ -167,6 +175,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 		return cfg
 	case Percussion:
 		cfg, _ := NewSettings(output, 1000.0, 500.0, 0.2, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.NoiseAmount = 0.4 + rand.Float64()*0.4     // 0.4 to 0.8
 		cfg.Attack = rand.Float64() * 0.005            // 0.0 to 0.005 seconds
 		cfg.Decay = 0.05 + rand.Float64()*0.15         // 0.05 to 0.2 seconds
@@ -181,6 +190,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 		return cfg
 	case Ride:
 		cfg, _ := NewSettings(output, 12000.0, 7000.0, 0.4, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.NoiseAmount = 0.5 + rand.Float64()*0.5     // 0.5 to 1.0
 		cfg.Attack = rand.Float64() * 0.01             // 0.0 to 0.01 seconds
 		cfg.Decay = 0.1 + rand.Float64()*0.3           // 0.1 to 0.4 seconds
@@ -195,6 +205,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 		return cfg
 	case Crash:
 		cfg, _ := NewSettings(output, 15000.0, 10000.0, 0.3, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.NoiseAmount = 0.6 + rand.Float64()*0.4     // 0.6 to 1.0
 		cfg.Attack = rand.Float64() * 0.005            // 0.0 to 0.005 seconds
 		cfg.Decay = 0.1 + rand.Float64()*0.25          // 0.1 to 0.35 seconds
@@ -209,6 +220,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 		return cfg
 	case Bass:
 		cfg, _ := NewSettings(output, 60.0, 30.0, 1.0, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.Attack = rand.Float64()*0.01 + 0.001       // 0.001 to 0.011 seconds
 		cfg.Decay = 0.1 + rand.Float64()*0.4           // 0.1 to 0.5 seconds
 		cfg.Sustain = rand.Float64() * 0.5             // 0.0 to 0.5
@@ -228,6 +240,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 		return cfg
 	case Xylophone:
 		cfg, _ := NewSettings(output, 1000.0, 500.0, 0.2, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.Attack = rand.Float64()*0.005 + 0.001      // 0.001 to 0.006 seconds
 		cfg.Decay = 0.05 + rand.Float64()*0.15         // 0.05 to 0.2 seconds
 		cfg.Sustain = 0.0                              // No sustain
@@ -241,6 +254,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 		return cfg
 	case Lead:
 		cfg, _ := NewSettings(output, 880.0, 440.0, 0.5, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.Attack = rand.Float64()*0.02 + 0.005       // 0.005 to 0.025 seconds
 		cfg.Decay = 0.2 + rand.Float64()*0.5           // 0.2 to 0.7 seconds
 		cfg.Sustain = 0.3 + rand.Float64()*0.7         // 0.3 to 1.0
@@ -257,6 +271,7 @@ func NewRandom(soundType SoundType, output io.WriteSeeker, sampleRate, bitDepth,
 	default:
 		// Handle unknown SoundType by returning a default Settings with randomized parameters
 		cfg, _ := NewSettings(output, 500.0, 250.0, 0.5, sampleRate, bitDepth, channels)
+		cfg.SoundType = soundType
 		cfg.Attack = rand.Float64()*0.02 + 0.001       // 0.001 to 0.021 seconds
 		cfg.Decay = rand.Float64()*0.3 + 0.1           // 0.1 to 0.4 seconds
 		cfg.Sustain = rand.Float64() * 0.5             // 0.0 to 0.5
@@ -278,8 +293,8 @@ func NewSnareSettings(output io.WriteSeeker, sampleRate, bitDepth, channels int)
 	if sampleRate <= 0 || bitDepth <= 0 || channels <= 0 {
 		return nil, errors.New("invalid sample rate, bit depth, or channels")
 	}
-
 	return &Settings{
+		SoundType:                  Snare,
 		SampleRate:                 sampleRate,
 		BitDepth:                   bitDepth,   // e.g., 16
 		Channels:                   channels,   // e.g., 1 for mono, 2 for stereo
@@ -313,6 +328,7 @@ func New606Kick(output io.WriteSeeker, duration float64, sampleRate, bitDepth, c
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Kick
 	cfg.WaveformType = WaveSine
 	cfg.Attack = 0.002
 	cfg.Decay = 0.25
@@ -334,6 +350,7 @@ func New707Kick(output io.WriteSeeker, duration float64, sampleRate, bitDepth, c
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Kick
 	cfg.WaveformType = WaveTriangle
 	cfg.Attack = 0.003
 	cfg.Decay = 0.3
@@ -355,6 +372,7 @@ func New808Kick(output io.WriteSeeker, duration float64, sampleRate, bitDepth, c
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Kick
 	cfg.WaveformType = WaveSine
 	cfg.Attack = 0.0 // Instant attack for a punchier sound
 	cfg.Decay = 0.6
@@ -376,6 +394,7 @@ func New909Kick(output io.WriteSeeker, duration float64, sampleRate, bitDepth, c
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Kick
 	cfg.WaveformType = WaveTriangle
 	cfg.Attack = 0.0
 	cfg.Decay = 0.25
@@ -397,6 +416,7 @@ func NewLinnDrumKick(output io.WriteSeeker, duration float64, sampleRate, bitDep
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Kick
 	cfg.WaveformType = WaveSquare
 	cfg.Attack = 0.004
 	cfg.Decay = 0.35
@@ -418,6 +438,7 @@ func NewDeepHouseKick(output io.WriteSeeker, duration float64, sampleRate, bitDe
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Kick
 	cfg.WaveformType = WaveSine
 	cfg.Attack = 0.005
 	cfg.Decay = 1.0
@@ -439,6 +460,7 @@ func NewExperimentalKick(output io.WriteSeeker, duration float64, sampleRate, bi
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Kick
 	cfg.WaveformType = WaveSawtooth
 	cfg.Attack = 0.001
 	cfg.Decay = 0.5
@@ -462,6 +484,7 @@ func New606Snare(output io.WriteSeeker, duration float64, sampleRate, bitDepth, 
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Snare
 	cfg.WaveformType = WaveTriangle
 	cfg.NoiseAmount = 0.6
 	cfg.Attack = 0.005
@@ -482,6 +505,7 @@ func New707Snare(output io.WriteSeeker, duration float64, sampleRate, bitDepth, 
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Snare
 	cfg.WaveformType = WaveSquare
 	cfg.NoiseAmount = 0.5
 	cfg.Attack = 0.001
@@ -502,6 +526,7 @@ func New808Snare(output io.WriteSeeker, duration float64, sampleRate, bitDepth, 
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Snare
 	cfg.WaveformType = WaveSine
 	cfg.NoiseAmount = 0.7
 	cfg.Attack = 0.002
@@ -522,6 +547,7 @@ func New909Snare(output io.WriteSeeker, duration float64, sampleRate, bitDepth, 
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Snare
 	cfg.WaveformType = WaveSawtooth
 	cfg.NoiseAmount = 0.6
 	cfg.Attack = 0.003
@@ -542,6 +568,7 @@ func NewLinnDrumSnare(output io.WriteSeeker, duration float64, sampleRate, bitDe
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Snare
 	cfg.WaveformType = WaveSquare
 	cfg.NoiseAmount = 0.5
 	cfg.Attack = 0.001
@@ -562,6 +589,7 @@ func NewExperimentalSnare(output io.WriteSeeker, duration float64, sampleRate, b
 	if err != nil {
 		return nil, err
 	}
+	cfg.SoundType = Snare
 	cfg.WaveformType = WaveSawtooth
 	cfg.NoiseAmount = 0.8
 	cfg.Attack = 0.002

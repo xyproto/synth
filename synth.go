@@ -22,6 +22,7 @@ const (
 
 // Settings holds the configuration for generating a sound
 type Settings struct {
+	SoundType                  SoundType
 	SampleRate                 int
 	BitDepth                   int
 	Channels                   int

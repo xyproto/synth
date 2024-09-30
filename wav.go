@@ -17,9 +17,9 @@ func (soundType SoundType) String() string {
 	case Snare:
 		return "snare"
 	case ClosedHH:
-		return "closedHH"
+		return "closed_hh"
 	case OpenHH:
-		return "openHH"
+		return "open_hh"
 	case Rimshot:
 		return "rimshot"
 	case Tom:
@@ -42,12 +42,12 @@ func (soundType SoundType) String() string {
 }
 
 // GenerateAndSaveTo generates samples for a given type (e.g., "kick", "snare") and saves it to a specified directory, avoiding filename collisions.
-func (cfg *Settings) GenerateAndSaveTo(soundType SoundType, directory string) (string, error) {
+func (cfg *Settings) GenerateAndSaveTo(directory string) (string, error) {
 	n := 1
 	var fileName string
 	for {
 		// Construct the file path with an incrementing number based on the type
-		fileName = filepath.Join(directory, fmt.Sprintf("%s%d.wav", soundType, n))
+		fileName = filepath.Join(directory, fmt.Sprintf("%s%d.wav", cfg.SoundType, n))
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
 			break
 		}
@@ -62,13 +62,12 @@ func (cfg *Settings) GenerateAndSaveTo(soundType SoundType, directory string) (s
 	// Set the file as the output for the sound generation
 	cfg.Output = file
 	// Generate the samples for the requested type
-	samples, err := cfg.Generate(soundType)
+	samples, err := cfg.Generate()
 	if err != nil {
 		return "", err
 	}
 	// Save the generated samples to the WAV file
-	err = playsample.SaveToWav(file, samples, cfg.SampleRate, cfg.BitDepth, cfg.Channels)
-	if err != nil {
+	if err := playsample.SaveToWav(file, samples, cfg.SampleRate, cfg.BitDepth, cfg.Channels); err != nil {
 		return "", fmt.Errorf("error saving to wav file: %v", err)
 	}
 	return fileName, nil

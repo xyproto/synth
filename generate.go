@@ -370,8 +370,8 @@ func (cfg *Settings) GenerateSweepWaveform() ([]float64, error) {
 }
 
 // Generate is a wrapper function that calls the appropriate Generate* function based on the given sound type
-func (cfg *Settings) Generate(soundType SoundType) ([]float64, error) {
-	switch soundType {
+func (cfg *Settings) Generate() ([]float64, error) {
+	switch cfg.SoundType {
 	case Kick:
 		return cfg.GenerateKick()
 	case Clap:
@@ -399,7 +399,7 @@ func (cfg *Settings) Generate(soundType SoundType) ([]float64, error) {
 	case Lead:
 		return cfg.GenerateLead()
 	default:
-		return nil, fmt.Errorf("unknown sound type: %d", soundType)
+		return nil, fmt.Errorf("unknown sound type: %d", cfg.SoundType)
 	}
 }
 
