@@ -26,16 +26,17 @@ func main() {
 	// Sound customization flags
 	noiseAmount := flag.Float64("noiseamount", 0.5, "Amount of noise to mix in (0.0 to 1.0)")
 	length := flag.Float64("length", 2000, "Length of the snare drum sample in milliseconds")
-	quality := flag.Int("quality", 96, "Sample rate in kHz (44, 48, 96, or 192)")
-	bitDepth := flag.Int("bitdepth", 24, "Bit depth of the audio (8, 16, 24 or 32)")
+	quality := flag.Int("quality", 44, "Sample rate in kHz (44, 48, 96, or 192)")
+	bitDepth := flag.Int("bitdepth", 16, "Bit depth of the audio (8, 16, 24 or 32)")
 	channels := flag.Int("channels", 1, "Channels (1 or 2)")
-	waveform := flag.Int("waveform", synth.WaveSine, "Waveform type (0: Sine, 1: Triangle, 2: Sawtooth, 3: Square)")
+	waveform := flag.Int("waveform", synth.WaveSquare, "Waveform type (0: Sine, 1: Triangle, 2: Sawtooth, 3: Square)")
 	attack := flag.Float64("attack", 0.005, "Attack time in seconds")
-	decay := flag.Float64("decay", 0.2, "Decay time in seconds")
-	sustain := flag.Float64("sustain", 0.1, "Sustain level (0.0 to 1.0)")
-	release := flag.Float64("release", 0.1, "Release time in seconds")
-	filterCutoff := flag.Float64("filter", 8000.0, "Filter cutoff frequency (Hz)")
-	drive := flag.Float64("drive", 0.2, "Amount of distortion/drive")
+	decay := flag.Float64("decay", 0.1, "Decay time in seconds")
+	sustain := flag.Float64("sustain", 0.0, "Sustain level (0.0 to 1.0)")
+	release := flag.Float64("release", 0.05, "Release time in seconds")
+	filterCutoff := flag.Float64("filter", 5000.0, "Filter cutoff frequency (Hz)")
+	drive := flag.Float64("drive", 0.3, "Amount of distortion/drive")
+	pitchDecay := flag.Float64("pitchdecay", 0.3, "Pitch envelope decay")
 	outputFile := flag.String("o", "snare.wav", "Output file path")
 	playSnare := flag.Bool("p", false, "Play the generated snare")
 	showVersion := flag.Bool("version", false, "Show the current version")
@@ -108,6 +109,7 @@ func main() {
 	cfg.FilterCutoff = *filterCutoff
 	cfg.Drive = *drive
 	cfg.SmoothFrequencyTransitions = true
+	cfg.PitchDecay = *pitchDecay
 
 	// Generate the snare drum waveform
 	samples, err := cfg.GenerateSnare()
