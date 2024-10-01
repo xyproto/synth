@@ -1,4 +1,4 @@
-# synth [![CI](https://github.com/xyproto/synth/actions/workflows/ci.yml/badge.svg)](https://github.com/xyproto/synth/actions/workflows/ci.yml)
+# synth [![CI](https://github.com/xyproto/synth/actions/workflows/ci.yml/badge.svg)](https://github.com/xyproto/synth/actions/workflows/ci.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/xyproto/synth)](https://goreportcard.com/report/github.com/xyproto/synth)
 
 Generate audio samples.
 
