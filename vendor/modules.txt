@@ -24,6 +24,6 @@ github.com/xyproto/env/v2
 # github.com/xyproto/files v1.7.0
 ## explicit; go 1.19
 github.com/xyproto/files
-# github.com/xyproto/playsample v0.2.0
+# github.com/xyproto/playsample v0.2.1
 ## explicit; go 1.23.1
 github.com/xyproto/playsample
