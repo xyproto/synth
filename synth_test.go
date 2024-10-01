@@ -304,11 +304,12 @@ func TestSaveTo(t *testing.T) {
 		SampleRate:       44100,
 		BitDepth:         16,
 		Duration:         1.0,
+		Channels:         1,
 		OscillatorLevels: []float64{1.0},
 	}
 
 	// Test saving the generated waveform to a .wav file
-	filename, err := cfg.GenerateAndSaveTo(Kick, ".")
+	filename, err := cfg.GenerateAndSaveTo(".")
 	defer os.Remove(filename) // Cleanup after test
 
 	if err != nil {
