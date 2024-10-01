@@ -1,4 +1,4 @@
-# synth
+# synth [![CI](https://github.com/xyproto/synth/actions/workflows/ci.yml/badge.svg)](https://github.com/xyproto/synth/actions/workflows/ci.yml)
 
 Generate audio samples.
 
