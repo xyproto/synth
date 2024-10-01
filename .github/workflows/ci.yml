@@ -19,6 +19,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.23
+
       - name: Cache Go Modules
         uses: actions/cache@v4
         with:
@@ -28,9 +29,17 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+      - name: Install SDL2 and ffplay
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev libsdl2-mixer-dev ffmpeg
       - name: Install Dependencies
         run: go mod tidy
-      - name: Build
-        run: go build ./...
-      - name: Run Tests
-        run: go test ./... -v
+      - name: Build and test with SDL2
+        run: |
+          go build ./...
+          go test ./... -v
+      - name: Build and test with ffplay
+        run: |
+          go build -tags ff ./...
+          go test -tags ff ./... -v
