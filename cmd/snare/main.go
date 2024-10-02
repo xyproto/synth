@@ -20,7 +20,7 @@ func main() {
 	snare707 := flag.Bool("707", false, "Generate a snare.wav like a 707 snare drum")
 	snare808 := flag.Bool("808", false, "Generate a snare.wav like an 808 snare drum")
 	snare909 := flag.Bool("909", false, "Generate a snare.wav like a 909 snare drum")
-	snareLinnDrum := flag.Bool("linn", false, "Generate a snare.wav like a LinnDrum snare drum")
+	snareLinn := flag.Bool("linn", false, "Generate a snare.wav like a LinnDrum snare")
 	snareExperimental := flag.Bool("experimental", false, "Generate a snare.wav with experimental-style characteristics")
 
 	// Sound customization flags
@@ -73,22 +73,22 @@ func main() {
 	var err error
 	switch {
 	case *snare606:
-		cfg, err = synth.New606Snare(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+		cfg, err = synth.New606(synth.Snare, nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating 606 snare with a sharp, crisp sound.")
 	case *snare707:
-		cfg, err = synth.New707Snare(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+		cfg, err = synth.New707(synth.Snare, nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating 707 snare with a classic electronic sound.")
 	case *snare808:
-		cfg, err = synth.New808Snare(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+		cfg, err = synth.New808(synth.Snare, nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating 808 snare with a deep, resonant sound.")
 	case *snare909:
-		cfg, err = synth.New909Snare(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+		cfg, err = synth.New909(synth.Snare, nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating 909 snare with a punchy, bright sound.")
-	case *snareLinnDrum:
-		cfg, err = synth.NewLinnDrumSnare(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+	case *snareLinn:
+		cfg, err = synth.NewLinn(synth.Snare, nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating LinnDrum snare with a classic digital sound.")
 	case *snareExperimental:
-		cfg, err = synth.NewExperimentalSnare(nil, *length/1000.0, sampleRate, *bitDepth, *channels)
+		cfg, err = synth.NewExperimental(synth.Snare, nil, *length/1000.0, sampleRate, *bitDepth, *channels)
 		fmt.Println("Generating experimental-style snare with unique characteristics.")
 	default:
 		cfg, err = synth.NewSnareSettings(nil, sampleRate, *bitDepth, *channels)
