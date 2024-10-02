@@ -322,284 +322,477 @@ func NewSnareSettings(output io.WriteSeeker, sampleRate, bitDepth, channels int)
 	}, nil
 }
 
-// New606Kick creates a 606-style kick drum
-func New606Kick(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 80.0, 50.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
+// New606 creates sounds similar to the Roland TR-606
+func New606(soundType SoundType, output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
+	var cfg *Settings
+	var err error
+	switch soundType {
+	case Kick:
+		cfg, err = NewSettings(output, 80.0, 50.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Kick
+		cfg.WaveformType = WaveSine
+		cfg.Attack = 0.002
+		cfg.Decay = 0.25
+		cfg.Sustain = 0.0
+		cfg.Release = 0.15
+		cfg.Drive = 0.3
+		cfg.FilterCutoff = 4000
+		cfg.FilterResonance = 1.2
+		cfg.Sweep = 0.8
+		cfg.PitchDecay = 0.6
+		cfg.FadeDuration = 0.008
+		cfg.SmoothFrequencyTransitions = true
+	case Snare:
+		cfg, err = NewSettings(output, 350.0, 200.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Snare
+		cfg.WaveformType = WaveTriangle
+		cfg.NoiseAmount = 0.6
+		cfg.Attack = 0.005
+		cfg.Decay = 0.15
+		cfg.Sustain = 0.0
+		cfg.Release = 0.1
+		cfg.Drive = 0.3
+		cfg.FilterCutoff = 7000
+		cfg.FilterResonance = 1.2
+		cfg.FadeDuration = 0.01
+		cfg.SmoothFrequencyTransitions = true
+	case Clap:
+		cfg, err = NewSettings(output, 400.0, 300.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Clap
+		cfg.WaveformType = WaveBrownNoise // Using Brown Noise for a softer clap
+		cfg.NoiseAmount = 1.0
+		cfg.Attack = 0.001
+		cfg.Decay = 0.2
+		cfg.Sustain = 0.0
+		cfg.Release = 0.1
+		cfg.Drive = 0.2
+		cfg.FilterCutoff = 8000
+		cfg.FilterResonance = 1.0
+		cfg.FadeDuration = 0.005
+		cfg.SmoothFrequencyTransitions = true
+	default:
+		return nil, errors.New("unsupported sound type for New606")
 	}
-	cfg.SoundType = Kick
-	cfg.WaveformType = WaveSine
-	cfg.Attack = 0.002
-	cfg.Decay = 0.25
-	cfg.Sustain = 0.0
-	cfg.Release = 0.15
-	cfg.Drive = 0.3
-	cfg.FilterCutoff = 4000
-	cfg.FilterResonance = 1.2
-	cfg.Sweep = 0.8
-	cfg.PitchDecay = 0.6
-	cfg.FadeDuration = 0.008
-	cfg.SmoothFrequencyTransitions = true
 	return cfg, nil
 }
 
-// New707Kick creates a 707-style kick drum
-func New707Kick(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 85.0, 55.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
+// New707 creates sounds similar to the Roland TR-707
+func New707(soundType SoundType, output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
+	var cfg *Settings
+	var err error
+	switch soundType {
+	case Kick:
+		cfg, err = NewSettings(output, 85.0, 55.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Kick
+		cfg.WaveformType = WaveTriangle
+		cfg.Attack = 0.002
+		cfg.Decay = 0.28
+		cfg.Sustain = 0.0
+		cfg.Release = 0.18
+		cfg.Drive = 0.45
+		cfg.FilterCutoff = 4500
+		cfg.FilterResonance = 1.1
+		cfg.Sweep = 0.7
+		cfg.PitchDecay = 0.5
+		cfg.FadeDuration = 0.01
+		cfg.SmoothFrequencyTransitions = true
+	case Snare:
+		cfg, err = NewSettings(output, 300.0, 150.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Snare
+		cfg.WaveformType = WaveSquare
+		cfg.NoiseAmount = 0.5
+		cfg.Attack = 0.001
+		cfg.Decay = 0.22
+		cfg.Sustain = 0.0
+		cfg.Release = 0.15
+		cfg.Drive = 0.4
+		cfg.FilterCutoff = 6500
+		cfg.FilterResonance = 1.0
+		cfg.FadeDuration = 0.008
+		cfg.SmoothFrequencyTransitions = true
+	case Clap:
+		cfg, err = NewSettings(output, 450.0, 300.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Clap
+		cfg.WaveformType = WavePinkNoise // Using Pink Noise for a warmer clap
+		cfg.NoiseAmount = 1.0
+		cfg.Attack = 0.002
+		cfg.Decay = 0.25
+		cfg.Sustain = 0.0
+		cfg.Release = 0.1
+		cfg.Drive = 0.3
+		cfg.FilterCutoff = 8000
+		cfg.FilterResonance = 1.1
+		cfg.FadeDuration = 0.006
+		cfg.SmoothFrequencyTransitions = true
+	default:
+		return nil, errors.New("unsupported sound type for New707")
 	}
-	cfg.SoundType = Kick
-	cfg.WaveformType = WaveTriangle
-	cfg.Attack = 0.003
-	cfg.Decay = 0.3
-	cfg.Sustain = 0.0
-	cfg.Release = 0.2
-	cfg.Drive = 0.4
-	cfg.FilterCutoff = 4500
-	cfg.FilterResonance = 1.0
-	cfg.Sweep = 0.7
-	cfg.PitchDecay = 0.5
-	cfg.FadeDuration = 0.01
-	cfg.SmoothFrequencyTransitions = true
 	return cfg, nil
 }
 
-// New808Kick creates an 808-style kick drum with improved parameters
-func New808Kick(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 55.0, 30.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
+// New808 creates sounds similar to the Roland TR-808
+func New808(soundType SoundType, output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
+	var cfg *Settings
+	var err error
+	switch soundType {
+	case Kick:
+		cfg, err = NewSettings(output, 55.0, 25.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Kick
+		cfg.WaveformType = WaveSine
+		cfg.Attack = 0.0
+		cfg.Decay = 0.7
+		cfg.Sustain = 0.0
+		cfg.Release = 0.5
+		cfg.Drive = 0.6
+		cfg.FilterCutoff = 1800
+		cfg.FilterResonance = 1.6
+		cfg.Sweep = 1.0
+		cfg.PitchDecay = 0.9
+		cfg.FadeDuration = 0.005
+		cfg.SmoothFrequencyTransitions = true
+	case Snare:
+		cfg, err = NewSettings(output, 240.0, 120.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Snare
+		cfg.WaveformType = WaveSine
+		cfg.NoiseAmount = 0.7
+		cfg.Attack = 0.002
+		cfg.Decay = 0.27
+		cfg.Sustain = 0.0
+		cfg.Release = 0.2
+		cfg.Drive = 0.5
+		cfg.FilterCutoff = 6200
+		cfg.FilterResonance = 1.5
+		cfg.FadeDuration = 0.015
+		cfg.SmoothFrequencyTransitions = true
+	case Clap:
+		cfg, err = NewSettings(output, 300.0, 200.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Clap
+		cfg.WaveformType = WavePinkNoise // Using Pink Noise for the classic 808 clap
+		cfg.NoiseAmount = 1.0
+		cfg.Attack = 0.001
+		cfg.Decay = 0.32
+		cfg.Sustain = 0.0
+		cfg.Release = 0.15
+		cfg.Drive = 0.4
+		cfg.FilterCutoff = 7000
+		cfg.FilterResonance = 1.2
+		cfg.FadeDuration = 0.01
+		cfg.SmoothFrequencyTransitions = true
+	default:
+		return nil, errors.New("unsupported sound type for New808")
 	}
-	cfg.SoundType = Kick
-	cfg.WaveformType = WaveSine
-	cfg.Attack = 0.0 // Instant attack for a punchier sound
-	cfg.Decay = 0.6
-	cfg.Sustain = 0.0
-	cfg.Release = 0.4
-	cfg.Drive = 0.5
-	cfg.FilterCutoff = 2000 // Lower cutoff for deeper bass
-	cfg.FilterResonance = 1.5
-	cfg.Sweep = 1.0
-	cfg.PitchDecay = 0.8
-	cfg.FadeDuration = 0.005
-	cfg.SmoothFrequencyTransitions = true
 	return cfg, nil
 }
 
-// New909Kick creates a 909-style kick drum with enhanced punch
-func New909Kick(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 60.0, 50.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
+// New909 creates sounds similar to the Roland TR-909
+func New909(soundType SoundType, output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
+	var cfg *Settings
+	var err error
+	switch soundType {
+	case Kick:
+		cfg, err = NewSettings(output, 60.0, 45.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Kick
+		cfg.WaveformType = WaveTriangle
+		cfg.Attack = 0.0
+		cfg.Decay = 0.27
+		cfg.Sustain = 0.0
+		cfg.Release = 0.22
+		cfg.Drive = 0.7
+		cfg.FilterCutoff = 2500
+		cfg.FilterResonance = 1.4
+		cfg.Sweep = 0.85
+		cfg.PitchDecay = 0.6
+		cfg.FadeDuration = 0.005
+		cfg.SmoothFrequencyTransitions = true
+	case Snare:
+		cfg, err = NewSettings(output, 250.0, 130.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Snare
+		cfg.WaveformType = WaveSawtooth
+		cfg.NoiseAmount = 0.6
+		cfg.Attack = 0.003
+		cfg.Decay = 0.2
+		cfg.Sustain = 0.0
+		cfg.Release = 0.15
+		cfg.Drive = 0.6
+		cfg.FilterCutoff = 7200
+		cfg.FilterResonance = 1.3
+		cfg.FadeDuration = 0.012
+		cfg.SmoothFrequencyTransitions = true
+	case Clap:
+		cfg, err = NewSettings(output, 350.0, 250.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Clap
+		cfg.WaveformType = WavePinkNoise // Using Pink Noise for a warm clap
+		cfg.NoiseAmount = 1.0
+		cfg.Attack = 0.002
+		cfg.Decay = 0.3
+		cfg.Sustain = 0.0
+		cfg.Release = 0.12
+		cfg.Drive = 0.5
+		cfg.FilterCutoff = 7500
+		cfg.FilterResonance = 1.2
+		cfg.FadeDuration = 0.009
+		cfg.SmoothFrequencyTransitions = true
+	default:
+		return nil, errors.New("unsupported sound type for New909")
 	}
-	cfg.SoundType = Kick
-	cfg.WaveformType = WaveTriangle
-	cfg.Attack = 0.0
-	cfg.Decay = 0.25
-	cfg.Sustain = 0.0
-	cfg.Release = 0.2
-	cfg.Drive = 0.7
-	cfg.FilterCutoff = 2500
-	cfg.FilterResonance = 1.4
-	cfg.Sweep = 0.8
-	cfg.PitchDecay = 0.6
-	cfg.FadeDuration = 0.005
-	cfg.SmoothFrequencyTransitions = true
 	return cfg, nil
 }
 
-// NewLinnDrumKick creates a LinnDrum-style kick drum sound
-func NewLinnDrumKick(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 75.0, 45.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
+// NewLinn creates sounds similar to the LinnDrum
+func NewLinn(soundType SoundType, output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
+	var cfg *Settings
+	var err error
+	switch soundType {
+	case Kick:
+		cfg, err = NewSettings(output, 75.0, 40.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Kick
+		cfg.WaveformType = WaveSquare
+		cfg.Attack = 0.003
+		cfg.Decay = 0.33
+		cfg.Sustain = 0.0
+		cfg.Release = 0.25
+		cfg.Drive = 0.5
+		cfg.FilterCutoff = 3200
+		cfg.FilterResonance = 1.0
+		cfg.Sweep = 0.6
+		cfg.PitchDecay = 0.5
+		cfg.FadeDuration = 0.015
+		cfg.SmoothFrequencyTransitions = true
+	case Snare:
+		cfg, err = NewSettings(output, 260.0, 140.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Snare
+		cfg.WaveformType = WaveSquare
+		cfg.NoiseAmount = 0.5
+		cfg.Attack = 0.001
+		cfg.Decay = 0.24
+		cfg.Sustain = 0.0
+		cfg.Release = 0.18
+		cfg.Drive = 0.4
+		cfg.FilterCutoff = 7500
+		cfg.FilterResonance = 1.1
+		cfg.FadeDuration = 0.01
+		cfg.SmoothFrequencyTransitions = true
+	case Clap:
+		cfg, err = NewSettings(output, 380.0, 280.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Clap
+		cfg.WaveformType = WaveWhiteNoise // Using White Noise for a crisp clap
+		cfg.NoiseAmount = 1.0
+		cfg.Attack = 0.002
+		cfg.Decay = 0.27
+		cfg.Sustain = 0.0
+		cfg.Release = 0.12
+		cfg.Drive = 0.3
+		cfg.FilterCutoff = 8000
+		cfg.FilterResonance = 1.0
+		cfg.FadeDuration = 0.008
+		cfg.SmoothFrequencyTransitions = true
+	default:
+		return nil, errors.New("unsupported sound type for NewLinn")
 	}
-	cfg.SoundType = Kick
-	cfg.WaveformType = WaveSquare
-	cfg.Attack = 0.004
-	cfg.Decay = 0.35
-	cfg.Sustain = 0.0
-	cfg.Release = 0.25
-	cfg.Drive = 0.5
-	cfg.FilterCutoff = 3000
-	cfg.FilterResonance = 1.0
-	cfg.Sweep = 0.6
-	cfg.PitchDecay = 0.5
-	cfg.FadeDuration = 0.015
-	cfg.SmoothFrequencyTransitions = true
 	return cfg, nil
 }
 
-// NewDeepHouseKick creates a Deep House kick drum with richer bass
-func NewDeepHouseKick(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 50.0, 30.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
+// NewDeepHouse creates Deep House style sounds
+func NewDeepHouse(soundType SoundType, output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
+	var cfg *Settings
+	var err error
+	switch soundType {
+	case Kick:
+		cfg, err = NewSettings(output, 45.0, 28.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Kick
+		cfg.WaveformType = WaveSine
+		cfg.Attack = 0.005
+		cfg.Decay = 1.2
+		cfg.Sustain = 0.0
+		cfg.Release = 0.9
+		cfg.Drive = 0.65
+		cfg.FilterCutoff = 1400
+		cfg.FilterResonance = 1.3
+		cfg.Sweep = 0.95
+		cfg.PitchDecay = 0.75
+		cfg.FadeDuration = 0.02
+		cfg.SmoothFrequencyTransitions = true
+	case Snare:
+		cfg, err = NewSettings(output, 220.0, 110.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Snare
+		cfg.WaveformType = WaveSine
+		cfg.NoiseAmount = 0.8
+		cfg.Attack = 0.005
+		cfg.Decay = 0.35
+		cfg.Sustain = 0.0
+		cfg.Release = 0.25
+		cfg.Drive = 0.5
+		cfg.FilterCutoff = 5800
+		cfg.FilterResonance = 1.5
+		cfg.FadeDuration = 0.02
+		cfg.SmoothFrequencyTransitions = true
+	case Clap:
+		cfg, err = NewSettings(output, 350.0, 250.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Clap
+		cfg.WaveformType = WaveBrownNoise // Using Brown Noise for a darker clap
+		cfg.NoiseAmount = 1.0
+		cfg.Attack = 0.002
+		cfg.Decay = 0.4
+		cfg.Sustain = 0.0
+		cfg.Release = 0.18
+		cfg.Drive = 0.4
+		cfg.FilterCutoff = 7300
+		cfg.FilterResonance = 1.2
+		cfg.FadeDuration = 0.015
+		cfg.SmoothFrequencyTransitions = true
+	default:
+		return nil, errors.New("unsupported sound type for NewDeepHouse")
 	}
-	cfg.SoundType = Kick
-	cfg.WaveformType = WaveSine
-	cfg.Attack = 0.005
-	cfg.Decay = 1.0
-	cfg.Sustain = 0.0
-	cfg.Release = 0.8
-	cfg.Drive = 0.6
-	cfg.FilterCutoff = 1500
-	cfg.FilterResonance = 1.2
-	cfg.Sweep = 0.9
-	cfg.PitchDecay = 0.7
-	cfg.FadeDuration = 0.02
-	cfg.SmoothFrequencyTransitions = true
 	return cfg, nil
 }
 
-// NewExperimentalKick creates an experimental kick drum sound
-func NewExperimentalKick(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 70.0, 20.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
+// NewExperimental creates experimental sounds with unusual parameters
+func NewExperimental(soundType SoundType, output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
+	var cfg *Settings
+	var err error
+	switch soundType {
+	case Kick:
+		cfg, err = NewSettings(output, 70.0, 20.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Kick
+		cfg.WaveformType = WaveSawtooth
+		cfg.Attack = 0.001
+		cfg.Decay = 0.5
+		cfg.Sustain = 0.0
+		cfg.Release = 0.3
+		cfg.Drive = 0.9
+		cfg.FilterCutoff = 5000
+		cfg.FilterResonance = 1.5
+		cfg.Sweep = 1.2
+		cfg.PitchDecay = 0.9
+		cfg.FadeDuration = 0.01
+		cfg.SmoothFrequencyTransitions = true
+	case Snare:
+		cfg, err = NewSettings(output, 400.0, 100.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Snare
+		cfg.WaveformType = WaveSawtooth
+		cfg.NoiseAmount = 0.8
+		cfg.Attack = 0.002
+		cfg.Decay = 0.3
+		cfg.Sustain = 0.0
+		cfg.Release = 0.25
+		cfg.Drive = 0.7
+		cfg.FilterCutoff = 5000
+		cfg.FilterResonance = 1.7
+		cfg.FadeDuration = 0.02
+		cfg.SmoothFrequencyTransitions = true
+	case Clap:
+		cfg, err = NewSettings(output, 500.0, 250.0, duration, sampleRate, bitDepth, channels)
+		if err != nil {
+			return nil, err
+		}
+		cfg.SoundType = Clap
+		cfg.WaveformType = WaveWhiteNoise // Using White Noise for a sharp, experimental clap
+		cfg.NoiseAmount = 1.0
+		cfg.Attack = 0.001
+		cfg.Decay = 0.35
+		cfg.Sustain = 0.0
+		cfg.Release = 0.2
+		cfg.Drive = 0.8
+		cfg.FilterCutoff = 6000
+		cfg.FilterResonance = 1.8
+		cfg.FadeDuration = 0.012
+		cfg.SmoothFrequencyTransitions = true
+	default:
+		return nil, errors.New("unsupported sound type for NewExperimental")
 	}
-	cfg.SoundType = Kick
-	cfg.WaveformType = WaveSawtooth
-	cfg.Attack = 0.001
-	cfg.Decay = 0.5
-	cfg.Sustain = 0.0
-	cfg.Release = 0.3
-	cfg.Drive = 0.9
-	cfg.FilterCutoff = 5000
-	cfg.FilterResonance = 1.5
-	cfg.Sweep = 1.2
-	cfg.PitchDecay = 0.9
-	cfg.FadeDuration = 0.01
-	cfg.SmoothFrequencyTransitions = true
 	return cfg, nil
 }
 
-// Snare Drum Functions
-
-// New606Snare creates a snare drum sound similar to the Roland TR-606
-func New606Snare(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 350.0, 200.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
+// NewClapSettings creates a new Settings instance with predefined values optimized for clap sounds.
+func NewClapSettings(output io.WriteSeeker, sampleRate, bitDepth, channels int) (*Settings, error) {
+	if sampleRate <= 0 || bitDepth <= 0 || channels <= 0 {
+		return nil, errors.New("invalid sample rate, bit depth, or channels")
 	}
-	cfg.SoundType = Snare
-	cfg.WaveformType = WaveTriangle
-	cfg.NoiseAmount = 0.6
-	cfg.Attack = 0.005
-	cfg.Decay = 0.15
-	cfg.Sustain = 0.0
-	cfg.Release = 0.1
-	cfg.Drive = 0.3
-	cfg.FilterCutoff = 7000
-	cfg.FilterResonance = 1.2
-	cfg.FadeDuration = 0.01
-	cfg.SmoothFrequencyTransitions = true
-	return cfg, nil
-}
-
-// New707Snare creates a snare drum sound similar to the Roland TR-707
-func New707Snare(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 300.0, 150.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
-	}
-	cfg.SoundType = Snare
-	cfg.WaveformType = WaveSquare
-	cfg.NoiseAmount = 0.5
-	cfg.Attack = 0.001
-	cfg.Decay = 0.2
-	cfg.Sustain = 0.0
-	cfg.Release = 0.15
-	cfg.Drive = 0.4
-	cfg.FilterCutoff = 6500
-	cfg.FilterResonance = 1.0
-	cfg.FadeDuration = 0.008
-	cfg.SmoothFrequencyTransitions = true
-	return cfg, nil
-}
-
-// New808Snare creates a snare drum sound similar to the Roland TR-808
-func New808Snare(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 240.0, 120.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
-	}
-	cfg.SoundType = Snare
-	cfg.WaveformType = WaveSine
-	cfg.NoiseAmount = 0.7
-	cfg.Attack = 0.002
-	cfg.Decay = 0.25
-	cfg.Sustain = 0.0
-	cfg.Release = 0.2
-	cfg.Drive = 0.5
-	cfg.FilterCutoff = 6000
-	cfg.FilterResonance = 1.5
-	cfg.FadeDuration = 0.015
-	cfg.SmoothFrequencyTransitions = true
-	return cfg, nil
-}
-
-// New909Snare creates a snare drum sound similar to the Roland TR-909
-func New909Snare(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 250.0, 130.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
-	}
-	cfg.SoundType = Snare
-	cfg.WaveformType = WaveSawtooth
-	cfg.NoiseAmount = 0.6
-	cfg.Attack = 0.003
-	cfg.Decay = 0.18
-	cfg.Sustain = 0.0
-	cfg.Release = 0.15
-	cfg.Drive = 0.6
-	cfg.FilterCutoff = 7000
-	cfg.FilterResonance = 1.3
-	cfg.FadeDuration = 0.012
-	cfg.SmoothFrequencyTransitions = true
-	return cfg, nil
-}
-
-// NewLinnDrumSnare creates a snare drum sound similar to the LinnDrum
-func NewLinnDrumSnare(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 260.0, 140.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
-	}
-	cfg.SoundType = Snare
-	cfg.WaveformType = WaveSquare
-	cfg.NoiseAmount = 0.5
-	cfg.Attack = 0.001
-	cfg.Decay = 0.22
-	cfg.Sustain = 0.0
-	cfg.Release = 0.18
-	cfg.Drive = 0.4
-	cfg.FilterCutoff = 7500
-	cfg.FilterResonance = 1.1
-	cfg.FadeDuration = 0.01
-	cfg.SmoothFrequencyTransitions = true
-	return cfg, nil
-}
-
-// NewExperimentalSnare creates an experimental snare drum sound
-func NewExperimentalSnare(output io.WriteSeeker, duration float64, sampleRate, bitDepth, channels int) (*Settings, error) {
-	cfg, err := NewSettings(output, 400.0, 100.0, duration, sampleRate, bitDepth, channels)
-	if err != nil {
-		return nil, err
-	}
-	cfg.SoundType = Snare
-	cfg.WaveformType = WaveSawtooth
-	cfg.NoiseAmount = 0.8
-	cfg.Attack = 0.002
-	cfg.Decay = 0.3
-	cfg.Sustain = 0.0
-	cfg.Release = 0.25
-	cfg.Drive = 0.7
-	cfg.FilterCutoff = 5000
-	cfg.FilterResonance = 1.7
-	cfg.FadeDuration = 0.02
-	cfg.SmoothFrequencyTransitions = true
-	return cfg, nil
+	return &Settings{
+		SoundType:                  Clap,
+		SampleRate:                 sampleRate,
+		BitDepth:                   bitDepth,
+		Channels:                   channels,
+		Output:                     output,
+		StartFreq:                  400.0,                            // Starting frequency in Hz
+		EndFreq:                    200.0,                            // Ending frequency in Hz
+		Duration:                   0.3,                              // Duration in seconds
+		WaveformType:               WaveWhiteNoise,                   // Noise waveform for clap sound
+		NoiseAmount:                1.0,                              // Full noise for claps
+		Attack:                     0.001,                            // Quick attack time
+		Decay:                      0.2,                              // Short decay time
+		Sustain:                    0.0,                              // No sustain
+		Release:                    0.1,                              // Short release time
+		Drive:                      0.2,                              // Mild distortion
+		FilterCutoff:               8000.0,                           // High filter cutoff for brightness
+		FilterResonance:            1.0,                              // Standard resonance
+		Sweep:                      0.0,                              // No pitch sweep
+		PitchDecay:                 0.0,                              // No pitch decay
+		FadeDuration:               0.005,                            // Quick fade to prevent clicks
+		SmoothFrequencyTransitions: true,                             // Enable smooth transitions
+		NumOscillators:             1,                                // Single oscillator
+		OscillatorLevels:           []float64{1.0},                   // Oscillator level
+		SaturatorAmount:            0.3,                              // Saturation amount
+		FilterBands:                []float64{500.0, 2000.0, 6000.0}, // Multi-band filter frequencies
+	}, nil
 }
