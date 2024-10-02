@@ -47,6 +47,14 @@ type Settings struct {
 	FilterBands                []float64
 	FadeDuration               float64
 	SmoothFrequencyTransitions bool
+	AttackCurve                FadeCurve
+	DecayCurve                 FadeCurve
+	ReleaseCurve               FadeCurve
+	ReverbAmount               float64
+	ReverbDecay                float64
+	DelayAmount                float64
+	DelayTime                  float64
+	DelayFeedback              float64
 }
 
 // FadeCurve defines a type for fade curve functions
