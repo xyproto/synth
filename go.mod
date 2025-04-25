@@ -13,6 +13,6 @@ require (
 	github.com/go-audio/wav v1.1.0 // indirect
 	github.com/veandco/go-sdl2 v0.4.40 // indirect
 	github.com/xyproto/binary v1.3.3 // indirect
-	github.com/xyproto/env/v2 v2.5.0 // indirect
-	github.com/xyproto/files v1.7.0 // indirect
+	github.com/xyproto/env/v2 v2.5.3 // indirect
+	github.com/xyproto/files v1.9.0 // indirect
 )
