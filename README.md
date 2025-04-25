@@ -10,4 +10,4 @@ Generate audio samples.
 ## General info
 
 * License: MIT
-* Version: 1.13.0
+* Version: 1.14.0
