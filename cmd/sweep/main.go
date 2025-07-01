@@ -20,7 +20,7 @@ var (
 	baseFreq    float64
 	showVersion bool
 	showHelp    bool
-	playSound   bool // Added -p flag variable
+	playSound   bool
 )
 
 func main() {
